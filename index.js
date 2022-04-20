@@ -1,8 +1,11 @@
 const express = require('express')
+const Database = require('./database.js');
 const app = express()
 const port = process.env.PORT || 3000;
-let id = 0; 
-let database = []
+
+let id = 0;
+let database = new Database();
+let loggedInUser = null;
 
 app.use(express.static('public'))
 app.use(express.json())
@@ -13,10 +16,11 @@ app.get('/', (req, res) => {
 })
 
 app.post('/api/auth/login', (req, res) => {
-  let { emailAdress, password } = req.body;
+  let user = req.body;
+  loggedInUser = user;
 
   res.status(201).send(JSON.stringify(user));
-  console.log("Logged in with email: " + emailAdress + " and password: " + password);
+  console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
 });
 
 app.post('/api/user', (req, res) => {
@@ -25,30 +29,44 @@ app.post('/api/user', (req, res) => {
   id++;
   user = {
     id,
-    ...user, 
+    ...user,
   }
-  database.push(user);
-  res.status(201).send(JSON.stringify(user));
+
+  database.addUser(user);
+  res.status(201).send(JSON.stringify(database.getAllUsers()));
 
   console.log("Registered user with email: " + user.emailAdress + " and first name: " + user.firstName);
 });
 
 app.get('/api/user', (req, res) => {
-  res.status(201).send(JSON.stringify(database));
-  console.log("Got all users");
+  if (loggedInUser) {
+    res.status(201).send(JSON.stringify(database.getAllUsers()));
+  } else {
+    res.status(401).json({
+      status: 401,
+      message: 'Unauthorized. You need to create a new user first, and login, to get a valid JWT.'
+    });
+  }
 });
 
 app.get('/api/user/profile', (req, res) => {
-  res.send(JSON.stringify(database[0]));
-  console.log("Get personal profile with id " + database[0].id);
+  if (loggedInUser) {
+    res.status(200).send(JSON.stringify(loggedInUser));
+  } else {
+    res.status(401).json({
+      status: 401,
+      message: 'No user logged in'
+    });
+  }
+  console.log("Get personal profile with id " + loggedInUser.id);
 });
 
 app.get('/api/user/:id', (req, res) => {
   let id = req.params.id;
 
-  let user = database.filter(user => user.id == id);
-  if (user.length > 0) {
-    res.status(201).send(JSON.stringify(user[0]));
+  let user = database.getUser(id);
+  if (user) {
+    res.status(201).send(JSON.stringify(user));
     console.log("Got user with id " + id);
   } else {
     res.status(404).json({
@@ -58,26 +76,47 @@ app.get('/api/user/:id', (req, res) => {
     console.log("User with id " + id + " not found");
   }
 });
-  
+
 app.put('/api/user/:id', (req, res) => {
   let user = req.body;
-  let id = req.params.id;
+  // Needs to be converted, so the id is not stored as a string in the database 
+  let id = parseInt(req.params.id);
 
-  res.status(201).send(JSON.stringify(user));
-  console.log("Update user with id: " + id);
+  if (loggedInUser) {
+    user = {
+      id,
+      ...user,
+    }
+    database.updateUser(id, user);
+    res.status(201).send(JSON.stringify(user));
+    console.log("Update user with id: " + id);
+  } else {
+    res.status(400).json({
+      status: 400,
+      message: 'Not allowed to edit'
+    });
+  }
 });
 
 app.delete('/api/user/:id', (req, res) => {
-  let id = req.params.id; 
-  database.splice(id - 1, 1);
-  res.send("Deleted user with id: " + JSON.stringify(id));
-  console.log("Deleted user with id: " + id);
+  let id = req.params.id;
+
+  if (loggedInUser) {
+    database.deleteUser(id);
+    res.status(201).send(JSON.stringify(database.getAllUsers()));
+    console.log("Deleted user with id: " + id);
+  } else {
+    res.status(400).json({
+      status: 400,
+      message: 'Not allowed to edit'
+    });
+  }
 });
 
-app.use((req, res, next) => {
-  res.status(404).json({  
+app.use((req, res) => {
+  res.status(404).json({
     status: 404,
-    result: 'Not found' 
+    result: 'Not found'
   });
 });
 
