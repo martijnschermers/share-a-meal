@@ -22,7 +22,6 @@
   },
   "homepage": "https://gitlab.com/martijnschermers/share-a-meal#readme",
   "dependencies": {
-    "body-parser": "^1.20.0",
     "express": "^4.17.3"
   },
   "devDependencies": {
