@@ -1,0 +1,31 @@
+{
+  "name": "share-a-meal",
+  "version": "1.0.0",
+  "description": "Backend server for the Share A Meal Android app.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/martijnschermers/share-a-meal.git"
+  },
+  "keywords": [
+    "Node.js"
+  ],
+  "author": "Martijn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/martijnschermers/share-a-meal/issues"
+  },
+  "homepage": "https://gitlab.com/martijnschermers/share-a-meal#readme",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "express": "^4.17.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
