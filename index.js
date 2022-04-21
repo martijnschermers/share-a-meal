@@ -16,24 +16,40 @@ app.get('/', (req, res) => {
 })
 
 app.post('/api/auth/login', (req, res) => {
-  let user = req.body;
-  loggedInUser = user;
+  let loginCredentials = req.body;
 
-  res.status(201).send(JSON.stringify(user));
-  console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
+  let user = database.loginUser(loginCredentials);
+
+  if (user) {
+    loggedInUser = user;
+    res.status(201).send(JSON.stringify(user));
+    console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
+  } else {
+    res.status(401).json({
+      status: 401,
+      message: 'Invalid email or password'
+    });
+  }
 });
 
 app.post('/api/user', (req, res) => {
   let user = req.body;
 
-  id++;
-  user = {
-    id,
-    ...user,
+  let addedUser = database.addUser(user);
+  if (addedUser) {
+    id++;
+    user = {
+      id,
+      ...user,
+    }
+    res.status(201).send(JSON.stringify(database.getAllUsers()));
+    console.log("Added user with email: " + user.emailAdress + " and password: " + user.password);
+  } else {
+    res.status(401).json({
+      status: 401,
+      message: 'Emailaddress is already taken'
+    });
   }
-
-  database.addUser(user);
-  res.status(201).send(JSON.stringify(database.getAllUsers()));
 
   console.log("Registered user with email: " + user.emailAdress + " and first name: " + user.firstName);
 });
