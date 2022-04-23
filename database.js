@@ -1,6 +1,7 @@
 module.exports = class Database {
   constructor() {
     this.database = [];
+    this.id = 0; 
   }
 
   loginUser(user) {
@@ -21,6 +22,11 @@ module.exports = class Database {
     let databaseUser = this.database.filter((currentUser) => currentUser.emailAdress === user.emailAdress);
 
     if (databaseUser.length === 0) {
+      this.id++;
+      user = {
+        id: this.id,
+        ...user,
+      }
       this.database.push(user);
       return true; // return the user that was added
     } 
@@ -37,10 +43,15 @@ module.exports = class Database {
   }
 
   updateUser(id, user) {
-    this.database[id - 1] = user;
+    let databaseUser = this.database[id - 1];
+    if (databaseUser != null && databaseUser != user) {
+      databaseUser = user;
+      return true; 
+    }
+    return false;
   }
 
   deleteUser(id) {
-    this.database.splice(id - 1, 1);
+    return this.database.splice(id - 1, 1);
   }
 }

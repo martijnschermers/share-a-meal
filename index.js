@@ -3,7 +3,6 @@ const Database = require('./database.js');
 const app = express()
 const port = process.env.PORT || 3000;
 
-let id = 0;
 let database = new Database();
 let loggedInUser = null;
 
@@ -37,11 +36,6 @@ app.post('/api/user', (req, res) => {
 
   let addedUser = database.addUser(user);
   if (addedUser) {
-    id++;
-    user = {
-      id,
-      ...user,
-    }
     res.status(201).send(JSON.stringify(database.getAllUsers()));
     console.log("Added user with email: " + user.emailAdress + " and password: " + user.password);
   } else {
@@ -95,17 +89,20 @@ app.get('/api/user/:id', (req, res) => {
 
 app.put('/api/user/:id', (req, res) => {
   let user = req.body;
-  // Needs to be converted, so the id is not stored as a string in the database 
-  let id = parseInt(req.params.id);
+  let id = req.params.id;
 
   if (loggedInUser) {
-    user = {
-      id,
-      ...user,
+    let updatedUser = database.updateUser(id, user);
+
+    if (updatedUser) {
+      res.status(201).send(JSON.stringify(database.getAllUsers()));
+      console.log("Update user with id: " + id);
+    } else {
+      res.status(404).json({
+        status: 404,
+        message: 'User not found'
+      });
     }
-    database.updateUser(id, user);
-    res.status(201).send(JSON.stringify(user));
-    console.log("Update user with id: " + id);
   } else {
     res.status(400).json({
       status: 400,
@@ -117,14 +114,14 @@ app.put('/api/user/:id', (req, res) => {
 app.delete('/api/user/:id', (req, res) => {
   let id = req.params.id;
 
-  if (loggedInUser) {
-    database.deleteUser(id);
+  let deletedUser = database.deleteUser(id);
+  if (deletedUser) {
     res.status(201).send(JSON.stringify(database.getAllUsers()));
     console.log("Deleted user with id: " + id);
   } else {
-    res.status(400).json({
-      status: 400,
-      message: 'Not allowed to edit'
+    res.status(404).json({
+      status: 404,
+      message: 'User not found'
     });
   }
 });
