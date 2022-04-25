@@ -18,7 +18,6 @@ app.post('/api/auth/login', (req, res) => {
   let loginCredentials = req.body;
 
   let user = database.loginUser(loginCredentials);
-
   if (user) {
     loggedInUser = user;
     res.status(201).send(JSON.stringify(user));
@@ -44,8 +43,6 @@ app.post('/api/user', (req, res) => {
       message: 'Emailaddress is already taken'
     });
   }
-
-  console.log("Registered user with email: " + user.emailAdress + " and first name: " + user.firstName);
 });
 
 app.get('/api/user', (req, res) => {
@@ -62,13 +59,13 @@ app.get('/api/user', (req, res) => {
 app.get('/api/user/profile', (req, res) => {
   if (loggedInUser) {
     res.status(200).send(JSON.stringify(loggedInUser));
+    console.log("Get personal profile with id " + loggedInUser.id);
   } else {
     res.status(401).json({
       status: 401,
       message: 'No user logged in'
     });
   }
-  console.log("Get personal profile with id " + loggedInUser.id);
 });
 
 app.get('/api/user/:id', (req, res) => {
@@ -114,14 +111,22 @@ app.put('/api/user/:id', (req, res) => {
 app.delete('/api/user/:id', (req, res) => {
   let id = req.params.id;
 
-  let deletedUser = database.deleteUser(id);
-  if (deletedUser) {
-    res.status(201).send(JSON.stringify(database.getAllUsers()));
-    console.log("Deleted user with id: " + id);
+  if (loggedInUser) {
+    let deletedUser = database.deleteUser(id);
+    
+    if (deletedUser) {
+      res.status(201).send(JSON.stringify(database.getAllUsers()));
+      console.log("Deleted user with id: " + id);
+    } else {
+      res.status(404).json({
+        status: 404,
+        message: 'User not found'
+      });
+    }
   } else {
-    res.status(404).json({
-      status: 404,
-      message: 'User not found'
+    res.status(400).json({
+      status: 400,
+      message: 'Not allowed to delete'
     });
   }
 });

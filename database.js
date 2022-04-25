@@ -5,9 +5,7 @@ module.exports = class Database {
   }
 
   loginUser(user) {
-    let userIndex = this.database.findIndex(
-      (currentUser) => currentUser.emailAdress === user.emailAdress
-    );
+    let userIndex = this.database.findIndex((currentUser) => currentUser.emailAdress === user.emailAdress);
     if (userIndex === -1) {
       return null;
     }
@@ -28,14 +26,18 @@ module.exports = class Database {
         ...user,
       }
       this.database.push(user);
-      return true; // return the user that was added
+      return true; // return if the user was added
     } 
 
     return false; 
   }
 
   getUser(id) {
-    return this.database[id - 1];
+    let databaseUser = this.database.filter((currentUser) => currentUser.id == id);
+    if (databaseUser.length === 1) {
+      return databaseUser;
+    }
+    return null;  // return null if no user was found
   }
 
   getAllUsers() {
@@ -43,15 +45,20 @@ module.exports = class Database {
   }
 
   updateUser(id, user) {
-    let databaseUser = this.database[id - 1];
-    if (databaseUser != null && databaseUser != user) {
-      databaseUser = user;
+    let userIndex = this.database.findIndex((currentUser) => currentUser.id == id);
+    if (this.database[userIndex] && this.database[userIndex] != user) {
+      this.database[userIndex] = user;
       return true; 
     }
     return false;
   }
 
   deleteUser(id) {
-    return this.database.splice(id - 1, 1);
+    let userIndex = this.database.findIndex((currentUser) => currentUser.id == id);
+    if (userIndex !== -1) {
+      this.database.splice(userIndex, 1);
+      return true;
+    }
+    return false;
   }
 }
