@@ -1,8 +1,25 @@
 const Database = require('../database.js');
+const assert = require('assert');
 let database = new Database();
 let loggedInUser = null;
 
 let controller = {
+  validateUser: (req, res, next) => {
+    let user = req.body;
+    let { firstName, lastName, emailAdress, password } = user;
+    try {
+      assert(typeof(firstName) === 'string', 'firstName must be a string');
+      assert(typeof(lastName) === 'string', 'lastName must be a string');
+      assert(typeof(emailAdress) === 'string', 'emailAdress must be a string');
+      assert(typeof(password) === 'string', 'password must be a string');
+      next();
+    } catch (error) {
+      res.status(400).json({
+        status: 400,
+        result: error.message
+      });      
+    }
+  },
   addUser: (req, res) => {
     let user = req.body;
   
@@ -19,7 +36,7 @@ let controller = {
   },
   getAllUsers: (req, res) => {
     if (loggedInUser) {
-      res.status(201).send(JSON.stringify(database.getAllUsers()));
+      res.status(200).send(JSON.stringify(database.getAllUsers()));
     } else {
       res.status(401).json({
         status: 401,
@@ -44,7 +61,7 @@ let controller = {
     let user = database.loginUser(loginCredentials);``
     if (user) {
       loggedInUser = user;
-      res.status(201).send(JSON.stringify(user));
+      res.status(200).send(JSON.stringify(user));
       console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
     } else {
       res.status(401).json({
@@ -58,7 +75,7 @@ let controller = {
 
     let user = database.getUser(id);
     if (user) {
-      res.status(201).send(JSON.stringify(user));
+      res.status(200).send(JSON.stringify(user));
       console.log("Got user with id " + id);
     } else {
       res.status(404).json({
@@ -76,7 +93,7 @@ let controller = {
       let updatedUser = database.updateUser(id, user);
 
       if (updatedUser) {
-        res.status(201).send(JSON.stringify(database.getAllUsers()));
+        res.status(200).send(JSON.stringify(database.getAllUsers()));
         console.log("Update user with id: " + id);
       } else {
         res.status(404).json({
@@ -85,8 +102,8 @@ let controller = {
         });
       }
     } else {
-      res.status(400).json({
-        status: 400,
+      res.status(401).json({
+        status: 401,
         message: 'Not allowed to edit'
       });
     }
@@ -98,7 +115,7 @@ let controller = {
       let deletedUser = database.deleteUser(id);
       
       if (deletedUser) {
-        res.status(201).send(JSON.stringify(database.getAllUsers()));
+        res.status(200).send(JSON.stringify(database.getAllUsers()));
         console.log("Deleted user with id: " + id);
       } else {
         res.status(404).json({
@@ -107,8 +124,8 @@ let controller = {
         });
       }
     } else {
-      res.status(400).json({
-        status: 400,
+      res.status(401).json({
+        status: 401,
         message: 'Not allowed to delete'
       });
     }
