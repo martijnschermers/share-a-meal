@@ -13,14 +13,15 @@ let controller = {
       assert(typeof(emailAdress) === 'string', 'emailAdress must be a string');
       assert(typeof(password) === 'string', 'password must be a string');
       next();
-    } catch (error) {
-      res.status(400).json({
+    } catch (err) {
+      const error = {
         status: 400,
-        result: error.message
-      });      
+        result: err.message
+      };
+      next(error); 
     }
   },
-  addUser: (req, res) => {
+  addUser: (req, res, next) => {
     let user = req.body;
   
     let addedUser = database.addUser(user);
@@ -28,34 +29,37 @@ let controller = {
       res.status(201).send(JSON.stringify(database.getAllUsers()));
       console.log("Added user with email: " + user.emailAdress + " and password: " + user.password);
     } else {
-      res.status(401).json({
+      const error = {
         status: 401,
-        message: 'Emailaddress is already taken'
-      });
+        result: 'Emailaddress is already taken'
+      }; 
+      next(error);
     }
   },
-  getAllUsers: (req, res) => {
+  getAllUsers: (req, res, next) => {
     if (loggedInUser) {
       res.status(200).send(JSON.stringify(database.getAllUsers()));
     } else {
-      res.status(401).json({
+      const error = {
         status: 401,
-        message: 'Unauthorized. You need to create a new user first, and login, to get a valid JWT.'
-      });
+        result: 'Unauthorized. You need to create a new user first, and login, to get a valid JWT.'
+      }; 
+      next(error);
     }
   },
-  getProfile: (req, res) => {
+  getProfile: (req, res, next) => {
     if (loggedInUser) {
       res.status(200).send(JSON.stringify(loggedInUser));
       console.log("Get personal profile with id " + loggedInUser.id);
     } else {
-      res.status(401).json({
+      const error = {
         status: 401,
-        message: 'No user logged in'
-      });
+        result: 'No user logged in'
+      }; 
+      next(error);
     }
   },
-  login: (req, res) => {
+  login: (req, res, next) => {
     let loginCredentials = req.body;
 
     let user = database.loginUser(loginCredentials);``
@@ -64,13 +68,14 @@ let controller = {
       res.status(200).send(JSON.stringify(user));
       console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
     } else {
-      res.status(401).json({
+      const error = {
         status: 401,
-        message: 'Invalid email or password'
-      });
+        result: 'Invalid email or password'
+      }; 
+      next(error);
     }
   },
-  getUserById: (req, res) => {
+  getUserById: (req, res, next) => {
     let id = req.params.id;
 
     let user = database.getUser(id);
@@ -78,14 +83,15 @@ let controller = {
       res.status(200).send(JSON.stringify(user));
       console.log("Got user with id " + id);
     } else {
-      res.status(404).json({
+      const error = {
         status: 404,
-        message: 'User not found'
-      });
+        result: 'User not found'
+      }; 
+      next(error);
       console.log("User with id " + id + " not found");
     }
   },
-  updateUser: (req, res) => {
+  updateUser: (req, res, next) => {
     let user = req.body;
     let id = req.params.id;
 
@@ -96,16 +102,18 @@ let controller = {
         res.status(200).send(JSON.stringify(database.getAllUsers()));
         console.log("Update user with id: " + id);
       } else {
-        res.status(404).json({
+        const error = {
           status: 404,
-          message: 'User not found'
-        });
+          result: 'User not found'
+        }; 
+        next(error);
       }
     } else {
-      res.status(401).json({
+      const error = {
         status: 401,
-        message: 'Not allowed to edit'
-      });
+        result: 'Not allowed to edit'
+      }; 
+      next(error);
     }
   },
   deleteUser: (req, res) => {
@@ -118,16 +126,18 @@ let controller = {
         res.status(200).send(JSON.stringify(database.getAllUsers()));
         console.log("Deleted user with id: " + id);
       } else {
-        res.status(404).json({
+        const error = {
           status: 404,
-          message: 'User not found'
-        });
+          result: 'User not found'
+        }; 
+        next(error);
       }
     } else {
-      res.status(401).json({
+      const error = {
         status: 401,
-        message: 'Not allowed to delete'
-      });
+        result: 'Not allowed to delete'
+      }; 
+      next(error);
     }
   }
 }
