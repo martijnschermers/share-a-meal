@@ -61,4 +61,8 @@ module.exports = class Database {
     }
     return false;
   }
+
+  clearDatabase() {
+    this.database = [];
+  }
 }

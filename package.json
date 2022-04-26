@@ -2,11 +2,11 @@
   "name": "share-a-meal",
   "version": "1.0.0",
   "description": "Backend server for the Share A Meal Android app.",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "test"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "mocha test/**/*test.js --exit"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,9 @@
     "express": "^4.17.3"
   },
   "devDependencies": {
+    "chai": "^4.3.6",
+    "chai-http": "^4.3.0",
+    "mocha": "^9.2.2",
     "nodemon": "^2.0.15"
   }
 }
