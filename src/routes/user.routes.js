@@ -1,23 +1,14 @@
-const express = require('express')
-const Database = require('./database.js');
-const app = express()
-const port = process.env.PORT || 3000;
+const express = require('express');
+const router = express.Router();
+const Database = require('../database.js');
 
 let database = new Database();
 let loggedInUser = null;
 
-app.use(express.static('public'))
-app.use(express.json())
-
-app.get('/', (req, res) => {
-  res.sendFile('index.html')
-  res.sendFile('style.css')
-})
-
-app.post('/api/auth/login', (req, res) => {
+router.post('/api/auth/login', (req, res) => {
   let loginCredentials = req.body;
 
-  let user = database.loginUser(loginCredentials);
+  let user = database.loginUser(loginCredentials);``
   if (user) {
     loggedInUser = user;
     res.status(201).send(JSON.stringify(user));
@@ -30,7 +21,7 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
-app.post('/api/user', (req, res) => {
+router.post('/api/user', (req, res) => {
   let user = req.body;
 
   let addedUser = database.addUser(user);
@@ -45,7 +36,7 @@ app.post('/api/user', (req, res) => {
   }
 });
 
-app.get('/api/user', (req, res) => {
+router.get('/api/user', (req, res) => {
   if (loggedInUser) {
     res.status(201).send(JSON.stringify(database.getAllUsers()));
   } else {
@@ -56,7 +47,7 @@ app.get('/api/user', (req, res) => {
   }
 });
 
-app.get('/api/user/profile', (req, res) => {
+router.get('/api/user/profile', (req, res) => {
   if (loggedInUser) {
     res.status(200).send(JSON.stringify(loggedInUser));
     console.log("Get personal profile with id " + loggedInUser.id);
@@ -68,7 +59,7 @@ app.get('/api/user/profile', (req, res) => {
   }
 });
 
-app.get('/api/user/:id', (req, res) => {
+router.get('/api/user/:id', (req, res) => {
   let id = req.params.id;
 
   let user = database.getUser(id);
@@ -84,7 +75,7 @@ app.get('/api/user/:id', (req, res) => {
   }
 });
 
-app.put('/api/user/:id', (req, res) => {
+router.put('/api/user/:id', (req, res) => {
   let user = req.body;
   let id = req.params.id;
 
@@ -108,7 +99,7 @@ app.put('/api/user/:id', (req, res) => {
   }
 });
 
-app.delete('/api/user/:id', (req, res) => {
+router.delete('/api/user/:id', (req, res) => {
   let id = req.params.id;
 
   if (loggedInUser) {
@@ -131,13 +122,4 @@ app.delete('/api/user/:id', (req, res) => {
   }
 });
 
-app.use((req, res) => {
-  res.status(404).json({
-    status: 404,
-    result: 'Not found'
-  });
-});
-
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`)
-})
+module.exports = router; 
