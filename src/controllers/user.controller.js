@@ -26,7 +26,10 @@ let controller = {
   
     let addedUser = database.addUser(user);
     if (addedUser) {
-      res.status(201).send(JSON.stringify(database.getAllUsers()));
+      res.status(201).send({
+        status: 201, 
+        result: database.getAllUsers()
+      });
       console.log("Added user with email: " + user.emailAdress + " and password: " + user.password);
     } else {
       const error = {
@@ -37,19 +40,17 @@ let controller = {
     }
   },
   getAllUsers: (req, res, next) => {
-    if (loggedInUser) {
-      res.status(200).send(JSON.stringify(database.getAllUsers()));
-    } else {
-      const error = {
-        status: 401,
-        result: 'Unauthorized. You need to create a new user first, and login, to get a valid JWT.'
-      }; 
-      next(error);
-    }
+    res.status(200).send({
+      status: 200, 
+      result: database.getAllUsers()
+    });
   },
   getProfile: (req, res, next) => {
     if (loggedInUser) {
-      res.status(200).send(JSON.stringify(loggedInUser));
+      res.status(200).send({
+        status: 200, 
+        result: loggedInUser
+      });
       console.log("Get personal profile with id " + loggedInUser.id);
     } else {
       const error = {
@@ -59,14 +60,31 @@ let controller = {
       next(error);
     }
   },
+  validateLogin: (req, res, next) => {
+    let user = req.body;
+    let { emailAdress, password } = user;
+    try {
+      assert(typeof(emailAdress) === 'string', 'emailAdress must be a string');
+      assert(typeof(password) === 'string', 'password must be a string');
+      next();
+    } catch (err) {
+      const error = {
+        status: 400,
+        result: err.message
+      };
+      next(error);
+    }
+  },
   login: (req, res, next) => {
     let loginCredentials = req.body;
 
     let user = database.loginUser(loginCredentials);``
     if (user) {
       loggedInUser = user;
-      res.status(200).send(JSON.stringify(user));
-      console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
+      res.status(200).send({
+        status: 200, 
+        result: user
+      });      console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
     } else {
       const error = {
         status: 401,
@@ -80,7 +98,10 @@ let controller = {
 
     let user = database.getUser(id);
     if (user) {
-      res.status(200).send(JSON.stringify(user));
+      res.status(200).send({
+        status: 200, 
+        result: user
+      });      
       console.log("Got user with id " + id);
     } else {
       const error = {
@@ -95,23 +116,18 @@ let controller = {
     let user = req.body;
     let id = req.params.id;
 
-    if (loggedInUser) {
-      let updatedUser = database.updateUser(id, user);
+    let updatedUser = database.updateUser(id, user);
 
-      if (updatedUser) {
-        res.status(200).send(JSON.stringify(database.getAllUsers()));
-        console.log("Update user with id: " + id);
-      } else {
-        const error = {
-          status: 404,
-          result: 'User not found'
-        }; 
-        next(error);
-      }
+    if (updatedUser) {
+      res.status(200).send({
+        status: 200, 
+        result: database.getAllUsers()
+      });
+      console.log("Update user with id: " + id);
     } else {
       const error = {
-        status: 401,
-        result: 'Not allowed to edit'
+        status: 400,
+        result: 'User not found'
       }; 
       next(error);
     }
@@ -123,7 +139,10 @@ let controller = {
       let deletedUser = database.deleteUser(id);
       
       if (deletedUser) {
-        res.status(200).send(JSON.stringify(database.getAllUsers()));
+        res.status(200).send({
+          status: 200, 
+          result: database.getAllUsers()
+        });
         console.log("Deleted user with id: " + id);
       } else {
         const error = {
