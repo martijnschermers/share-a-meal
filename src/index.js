@@ -1,7 +1,9 @@
 const express = require('express')
-const app = express()
-const port = process.env.PORT || 3000;
 const userRouter = require('./routes/user.routes');
+const app = express()
+
+require('dotenv').config();
+const port = process.env.PORT;
 
 app.use(express.static('public'))
 app.use(express.json())

@@ -91,7 +91,55 @@ describe('Manager users', () => {
           res.body.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql('emailAdress must be a string');
+          result.should.be.a('string').eql("\"password\" is required");
+          done();
+        }
+      );
+    });
+  });
+
+  describe('TC-201-2 /POST user', () => {
+    it('it should not POST a user with a invalid email', (done) => {
+      let user = {
+        firstName: "John",
+        lastName: "Doe",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        password: "secret",
+        emailAdress: "invalidEmail"
+      }
+      chai.request(server)
+        .post('/api/user')
+        .send(user)
+        .end((err, res) => {
+          res.body.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql("\"email\" must be a valid email");
+          done();
+        }
+      );
+    });
+  });
+
+  describe('TC-201-3 /POST user', () => {
+    it('it should not POST a user with a invalid password', (done) => {
+      let user = {
+        firstName: "John",
+        lastName: "Doe",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        password: "se",
+        emailAdress: "john.doe@gmail.com"
+      }
+      chai.request(server)
+        .post('/api/user')
+        .send(user)
+        .end((err, res) => {
+          res.body.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql(`\"password\" with value \"${user.password}\" fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
           done();
         }
       );
