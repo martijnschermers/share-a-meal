@@ -1,25 +1,28 @@
 const Database = require('../database.js');
 const assert = require('assert');
+const Joi = require('joi'); 
 let database = new Database();
 let loggedInUser = null;
 
+const schema = Joi.object({
+  firstName: Joi.string().alphanum().required(),
+  lastName: Joi.string().alphanum().required(),
+  password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
+  email: Joi.string().email({ minDomainSegments: 2 }),
+});
+
 let controller = {
   validateUser: (req, res, next) => {
-    let user = req.body;
-    let { firstName, lastName, emailAdress, password } = user;
-    try {
-      assert(typeof(firstName) === 'string', 'firstName must be a string');
-      assert(typeof(lastName) === 'string', 'lastName must be a string');
-      assert(typeof(emailAdress) === 'string', 'emailAdress must be a string');
-      assert(typeof(password) === 'string', 'password must be a string');
-      next();
-    } catch (err) {
-      const error = {
+    let { firstName, lastName, emailAdress, password } = req.body;
+    const { error, value } = schema.validate({ firstName: firstName, lastName: lastName, email: emailAdress, password: password });
+    if (error) {
+      const err = {
         status: 400,
-        result: err.message
+        result: error.details.message
       };
-      next(error); 
-    }
+      next(err); 
+    } 
+    next();
   },
   addUser: (req, res, next) => {
     let user = req.body;
