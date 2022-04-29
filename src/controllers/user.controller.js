@@ -27,35 +27,47 @@ let controller = {
     next();
   },
   addUser: (req, res, next) => {
-    let user = req.body;
+    dbconnection.getConnection(function (err, connection) {
+      let user = req.body;
 
-    let addedUser = database.addUser(user);
-    if (addedUser) {
-      res.status(201).json({
-        status: 201,
-        result: database.getAllUsers()
+      if (err) throw err;
+      connection.query('SELECT * FROM user', function (error, results, fields) {
+        if (error) throw error;
+
+        results = JSON.parse(JSON.stringify(results));
+
+        if (results.filter(item => item.emailAdress === user.emailAdress).length === 0) {
+          connection.query('INSERT INTO user SET ?', user, function (error, results, fields) {
+            connection.release();
+            if (error) throw error;
+          });
+
+          res.status(200).json({
+            status: 200,
+            result: results
+          });
+        } else {
+          const err = {
+            status: 401,
+            result: 'Emailaddress is already taken'
+          };
+          next(err);
+        }
       });
-      console.log("Added user with email: " + user.emailAdress + " and password: " + user.password);
-    } else {
-      const error = {
-        status: 401,
-        result: 'Emailaddress is already taken'
-      };
-      next(error);
-    }
+    });
   },
   getAllUsers: (req, res, next) => {
     dbconnection.getConnection(function (err, connection) {
-      if (err) throw err; 
+      if (err) throw err;
 
-      connection.query('SELECT name FROM meal', function (error, results, fields) {
+      connection.query('SELECT * FROM user', function (error, results, fields) {
         connection.release();
-
         if (error) throw error;
 
+        results = JSON.parse(JSON.stringify(results));
         res.status(200).json({
           status: 200,
-          result: results[0].name
+          result: results
         });
       });
     });
@@ -93,7 +105,7 @@ let controller = {
   login: (req, res, next) => {
     let loginCredentials = req.body;
 
-    let user = database.loginUser(loginCredentials); 
+    let user = database.loginUser(loginCredentials);
     if (user) {
       loggedInUser = user;
       res.status(200).json({
@@ -110,23 +122,30 @@ let controller = {
     }
   },
   getUserById: (req, res, next) => {
-    let id = req.params.id;
+    dbconnection.getConnection(function (err, connection) {
+      let id = req.params.id;
 
-    let user = database.getUser(id);
-    if (user) {
-      res.status(200).json({
-        status: 200,
-        result: user
+      if (err) throw err;
+
+      connection.query(`SELECT * FROM user WHERE id = ${id}`, function (error, results, fields) {
+        connection.release();
+        if (error) throw error;
+
+        if (results.length > 0) {
+          results = JSON.parse(JSON.stringify(results));
+          res.status(200).json({
+            status: 200,
+            result: results
+          });
+        } else {
+          const error = {
+            status: 404,
+            result: 'User not found'
+          };
+          next(error);
+        }
       });
-      console.log("Got user with id " + id);
-    } else {
-      const error = {
-        status: 404,
-        result: 'User not found'
-      };
-      next(error);
-      console.log("User with id " + id + " not found");
-    }
+    });
   },
   updateUser: (req, res, next) => {
     let user = req.body;
@@ -148,33 +167,30 @@ let controller = {
       next(error);
     }
   },
-  deleteUser: (req, res) => {
-    let id = req.params.id;
+  deleteUser: (req, res, next) => {
+    dbconnection.getConnection(function (err, connection) {
+      let id = req.params.id;
 
-    if (loggedInUser) {
-      let deletedUser = database.deleteUser(id);
+      if (err) throw err;
 
-      if (deletedUser) {
-        res.status(200).json({
-          status: 200,
-          result: database.getAllUsers()
-        });
-        console.log("Deleted user with id: " + id);
-      } else {
-        const error = {
-          status: 404,
-          result: 'User not found'
-        };
-        next(error);
-      }
-    } else {
-      const error = {
-        status: 401,
-        result: 'Not allowed to delete'
-      };
-      next(error);
-    }
-  }
+      connection.query(`DELETE FROM user WHERE id = ${id}`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.affectedRows == 0) {
+          const error = {
+            status: 404,
+            result: 'User not found'
+          };
+          next(error);
+        } else {
+          res.status(200).json({
+            status: 200,
+            result: getAllUsers()
+          });
+        }
+        console.log(results);
+      });
+    });
+  },
 }
 
 module.exports = controller;
