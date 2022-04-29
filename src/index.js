@@ -11,7 +11,7 @@ app.get('/', (req, res) => {
   res.sendFile('style.css')
 })
 
-app.use(userRouter); 
+app.use('/api', userRouter); 
 
 app.use((req, res) => {
   res.status(404).json({

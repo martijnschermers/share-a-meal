@@ -2,18 +2,18 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/user.controller');
 
-router.post('/api/auth/login', controller.validateLogin, controller.login);
+router.post('/auth/login', controller.validateLogin, controller.login);
 
-router.post('/api/user', controller.validateUser, controller.addUser);
+router.post('/user', controller.validateUser, controller.addUser);
 
-router.get('/api/user', controller.getAllUsers);
+router.get('/user', controller.getAllUsers);
 
-router.get('/api/user/profile', controller.getProfile);
+router.get('/user/profile', controller.getProfile);
 
-router.get('/api/user/:id', controller.getUserById);
+router.get('/user/:id', controller.getUserById);
 
-router.put('/api/user/:id', controller.updateUser);
+router.put('/user/:id', controller.updateUser);
 
-router.delete('/api/user/:id', controller.deleteUser);
+router.delete('/user/:id', controller.deleteUser);
 
 module.exports = router; 
