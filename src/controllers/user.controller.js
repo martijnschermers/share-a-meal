@@ -18,7 +18,7 @@ let controller = {
     if (error) {
       const err = {
         status: 400,
-        result: error.details.message
+        result: error.message
       };
       next(err); 
     } 
@@ -29,7 +29,7 @@ let controller = {
   
     let addedUser = database.addUser(user);
     if (addedUser) {
-      res.status(201).send({
+      res.status(201).json({
         status: 201, 
         result: database.getAllUsers()
       });
@@ -43,14 +43,14 @@ let controller = {
     }
   },
   getAllUsers: (req, res, next) => {
-    res.status(200).send({
+    res.status(200).json({
       status: 200, 
       result: database.getAllUsers()
     });
   },
   getProfile: (req, res, next) => {
     if (loggedInUser) {
-      res.status(200).send({
+      res.status(200).json({
         status: 200, 
         result: loggedInUser
       });
@@ -84,10 +84,11 @@ let controller = {
     let user = database.loginUser(loginCredentials);``
     if (user) {
       loggedInUser = user;
-      res.status(200).send({
+      res.status(200).json({
         status: 200, 
         result: user
-      });      console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
+      });      
+      console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
     } else {
       const error = {
         status: 401,
@@ -101,7 +102,7 @@ let controller = {
 
     let user = database.getUser(id);
     if (user) {
-      res.status(200).send({
+      res.status(200).json({
         status: 200, 
         result: user
       });      
@@ -122,7 +123,7 @@ let controller = {
     let updatedUser = database.updateUser(id, user);
 
     if (updatedUser) {
-      res.status(200).send({
+      res.status(200).json({
         status: 200, 
         result: database.getAllUsers()
       });
@@ -142,7 +143,7 @@ let controller = {
       let deletedUser = database.deleteUser(id);
       
       if (deletedUser) {
-        res.status(200).send({
+        res.status(200).json({
           status: 200, 
           result: database.getAllUsers()
         });
