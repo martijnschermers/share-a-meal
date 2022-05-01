@@ -18,7 +18,8 @@ let controller = {
     if (error) {
       const err = {
         status: 400,
-        result: error.message
+        // Error message wrapped variable in /""\ for some reason
+        result: error.message.toString().replace(/"/g, '')
       };
       next(err); 
     } 
