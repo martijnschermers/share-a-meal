@@ -23,7 +23,7 @@ describe('Manager users', () => {
           let { status, result } = res.body;
           status.should.eql(400);
           res.body.should.be.an('object');
-          result.should.be.a('string').eql('password is required');
+          result.should.be.a('string').eql('email is required');
         });          
       done();
     });
@@ -35,11 +35,11 @@ describe('Manager users', () => {
         .post('/api/auth/login')
         .send({
           emailAdress: 'john@gmail',
-          password: '12345678'
+          password: 'secret'
         })
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(401);
+          status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql('email must be a valid email');
         });          
@@ -58,7 +58,7 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(401);
+          status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
         });          
@@ -66,47 +66,49 @@ describe('Manager users', () => {
     });
   });
 
-  describe.skip('TC-101-5 /POST login', () => {
-    it('should return a user with a valid email and password', (done) => {
+  describe('TC-101-4 /POST login', () => {
+    it('should not login a user that does not exist', (done) => {
+      let user = {
+        emailAdress: 'john@hotmail.com',
+        password: 'secret'
+      }
       chai.request(server)
         .post('/api/auth/login')
-        .send({
-          emailAdress: 'johndoe@gmail.com',
-          password: '12345678'
-        })
+        .send(user)
         .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.be.a('object');
-          res.body.should.have.property('id');
-          res.body.should.have.property('firstName');
-          res.body.should.have.property('lastName');
-          res.body.should.have.property('emailAdress');
-          res.body.should.have.property('password');
-          res.body.should.have.property('role');
-          res.body.should.have.property('token');
-          res.body.should.have.property('tokenExpiration');
-          res.body.should.have.property('createdAt');
-          res.body.should.have.property('updatedAt');
-          res.body.should.have.property('deletedAt');
-          res.body.should.have.property('id').eql(1);
-          res.body.should.have.property('firstName').eql('John');
-          res.body.should.have.property('lastName').eql('Doe');
+          let { status, result } = res.body;
+          status.should.eql(400);
+          res.body.should.be.an('object');
+          result.should.be.a('string').eql(`Wrong email or password`);
         });          
       done();
     });
   });
 
-  describe.skip('TC-202-1 /GET users', () => {
-    it('it should GET all the users', (done) => {
+  describe('TC-101-5 /POST login', () => {
+    it('should return a user with a valid email and password', (done) => {
       chai.request(server)
-        .get('/api/user')
+        .post('/api/auth/login')
+        .send({
+          emailAdress: 'johndoe@gmail.com',
+          password: 'secret'
+        })
         .end((err, res) => {
-          res.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(200);
-          result.length.should.be.eql(0);
-          done();
-        });
+          result.should.be.a('object');
+          result.should.have.property('id');
+          result.should.have.property('firstName');
+          result.should.have.property('lastName');
+          result.should.have.property('isActive');
+          result.should.have.property('emailAdress');
+          result.should.have.property('password');
+          result.should.have.property('phoneNumber');
+          result.should.have.property('roles');
+          result.should.have.property('street');
+          result.should.have.property('city');
+        });          
+      done();
     });
   });
 
@@ -126,7 +128,7 @@ describe('Manager users', () => {
           res.body.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql("\"password\" is required");
+          result.should.be.a('string').eql("password is required");
           done();
         }
       );
@@ -150,7 +152,7 @@ describe('Manager users', () => {
           res.body.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql("\"email\" must be a valid email");
+          result.should.be.a('string').eql("email must be a valid email");
           done();
         }
       );
@@ -174,10 +176,72 @@ describe('Manager users', () => {
           res.body.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql(`\"password\" with value \"${user.password}\" fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
+          result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
           done();
         }
       );
+    });
+  });
+
+  describe('TC-201-4 /POST user', () => {
+    it('it should not POST a user with an email that already exists', (done) => {
+      let user = {
+        firstName: "John",
+        lastName: "Doe",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        password: "secret",
+        emailAdress: "johndoe@gmail.com"
+      }
+      chai.request(server)
+        .post('/api/user')
+        .send(user)
+        .end((err, res) => {
+          res.body.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(401);
+          result.should.be.a('string').eql('Emailaddress is already taken');
+          done();
+        }
+      );
+    });
+  });
+
+  describe('TC-201-5 /POST user', () => {
+    it('it should POST a user with valid parameters', (done) => {
+      let user = {
+        firstName: "John",
+        lastName: "Beton",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        password: "secret",
+        emailAdress: "johnbeton@gmail.com"
+      }
+      chai.request(server)
+        .post('/api/user')
+        .send(user)
+        .end((err, res) => {
+          res.body.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.a('array');
+          done();
+        }
+      );
+    });
+  });
+
+  describe('TC-202-1 /GET users', () => {
+    it('it should GET all the users', (done) => {
+      chai.request(server)
+        .get('/api/user')
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.length.should.be.eql(6);
+          done();
+        });
     });
   });
 
@@ -193,12 +257,12 @@ describe('Manager users', () => {
         password: "secret"
       }
       chai.request(server)
-        .put('/api/user/1')
+        .put('/api/user/0')
         .send(user)
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(400);
-          result.should.be.a('string').eql('User not found');
+          status.should.eql(404);
+          result.should.be.a('string').eql('Update failed');
           done();
         }
       );

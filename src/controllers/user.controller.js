@@ -16,7 +16,7 @@ let controller = {
     if (error) {
       const err = {
         status: 400,
-        // Error message wrapped variable in /""\ for some reason
+        // Error message wrapped variable in /" "\ for some reason
         result: error.message.replace(/"/g, '')
       };
       next(err);
@@ -86,12 +86,12 @@ let controller = {
     let { emailAdress, password } = req.body;
     const schema = Joi.object({
       password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
-      email: Joi.string().email({ minDomainSegments: 2 }),
+      email: Joi.string().email({ minDomainSegments: 2 }).required(),
     });
     const { error } = schema.validate({ email: emailAdress, password: password });
     if (error) {
       const err = {
-        status: 401,
+        status: 400,
         // Error message wrapped variable in /""\ for some reason
         result: error.message.replace(/"/g, '')
       };
@@ -110,7 +110,7 @@ let controller = {
           next();
         } else {
           const error = {
-            status: 401,
+            status: 400,
             result: 'Wrong email or password'
           };
           next(error);
@@ -182,7 +182,7 @@ let controller = {
             });
           } else {
             const error = {
-              status: 403,
+              status: 404,
               result: 'Update failed'
             };
             next(error);
