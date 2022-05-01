@@ -1,15 +1,13 @@
 const chai = require('chai'); 
 const chaiHttp = require('chai-http');
 const server = require('../../src/index');
-const Database = require('../../src/database');
-let database = new Database();
 
 chai.should();
 chai.use(chaiHttp);
 
 describe('Manager users', () => {
   beforeEach((done) => {
-    database.clearDatabase();
+    //TODO: Clear the database before each test
     done();
   });
 
