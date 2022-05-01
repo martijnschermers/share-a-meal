@@ -14,7 +14,7 @@ describe('Manager users', () => {
   });
 
   describe('TC-101-1 /POST login', () => {
-    it('should return a error message', (done) => {
+    it('should not login a user without a emailAdress', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -25,7 +25,44 @@ describe('Manager users', () => {
           let { status, result } = res.body;
           status.should.eql(400);
           res.body.should.be.an('object');
-          result.should.be.a('string').eql('emailAdress must be a string');
+          result.should.be.a('string').eql('password is required');
+        });          
+      done();
+    });
+  });
+
+  describe('TC-101-2 /POST login', () => {
+    it('should not login a user with a invalid emailAdress', (done) => {
+      chai.request(server)
+        .post('/api/auth/login')
+        .send({
+          emailAdress: 'john@gmail',
+          password: '12345678'
+        })
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(401);
+          res.body.should.be.an('object');
+          result.should.be.a('string').eql('email must be a valid email');
+        });          
+      done();
+    });
+  });
+
+  describe('TC-101-3 /POST login', () => {
+    it('should not login a user with a invalid password', (done) => {
+      let user = {
+        emailAdress: 'john@gmail',
+        password: 'se'
+      }
+      chai.request(server)
+        .post('/api/auth/login')
+        .send(user)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(401);
+          res.body.should.be.an('object');
+          result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
         });          
       done();
     });
