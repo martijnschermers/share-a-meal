@@ -1,8 +1,5 @@
-const Database = require('../database.js');
-const assert = require('assert');
 const Joi = require('joi');
-const dbconnection = require('../../database/database');
-let database = new Database();
+const database = require('../../database/database');
 
 let loggedInUser = null;
 
@@ -15,7 +12,7 @@ let controller = {
       password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
       email: Joi.string().email({ minDomainSegments: 2 }),
     });
-    const { error, value } = schema.validate({ firstName: firstName, lastName: lastName, email: emailAdress, password: password });
+    const { error } = schema.validate({ firstName: firstName, lastName: lastName, email: emailAdress, password: password });
     if (error) {
       const err = {
         status: 400,
@@ -27,24 +24,23 @@ let controller = {
     next();
   },
   addUser: (req, res, next) => {
-    dbconnection.getConnection(function (err, connection) {
+    database.getConnection(function (err, connection) {
       let user = req.body;
 
       if (err) throw err;
       connection.query('SELECT * FROM user', function (error, results, fields) {
         if (error) throw error;
 
-        results = JSON.parse(JSON.stringify(results));
-
         if (results.filter(item => item.emailAdress === user.emailAdress).length === 0) {
-          connection.query('INSERT INTO user SET ?', user, function (error, results, fields) {
+          // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
+          connection.query('INSERT INTO user SET ?; SELECT * FROM user;', user, function (error, results, fields) {
             connection.release();
             if (error) throw error;
-          });
 
-          res.status(200).json({
-            status: 200,
-            result: results
+            res.status(200).json({
+              status: 200,
+              result: results[1]
+            });
           });
         } else {
           const err = {
@@ -56,15 +52,14 @@ let controller = {
       });
     });
   },
-  getAllUsers: (req, res, next) => {
-    dbconnection.getConnection(function (err, connection) {
+  getAllUsers: (req, res) => {
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       connection.query('SELECT * FROM user', function (error, results, fields) {
         connection.release();
         if (error) throw error;
 
-        results = JSON.parse(JSON.stringify(results));
         res.status(200).json({
           status: 200,
           result: results
@@ -78,7 +73,7 @@ let controller = {
         status: 200,
         result: loggedInUser
       });
-      console.log("Get personal profile with id " + loggedInUser.id);
+      console.log("Get personal profile");
     } else {
       const error = {
         status: 401,
@@ -93,7 +88,7 @@ let controller = {
       password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
       email: Joi.string().email({ minDomainSegments: 2 }),
     });
-    const { error, value } = schema.validate({ email: emailAdress, password: password });
+    const { error } = schema.validate({ email: emailAdress, password: password });
     if (error) {
       const err = {
         status: 401,
@@ -103,8 +98,8 @@ let controller = {
       next(err);
     }
 
-    dbconnection.getConnection(function (err, connection) {
-      if (err) throw err; 
+    database.getConnection(function (err, connection) {
+      if (err) throw err;
 
       connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}' AND password = '${password}'`, function (error, results, fields) {
         connection.release();
@@ -123,16 +118,17 @@ let controller = {
       });
     });
   },
-  login: (req, res, next) => {
+  login: (req, res) => {
     let { emailAdress } = req.body;
 
-    dbconnection.getConnection(function (err, connection) {
-      if (err) throw err; 
+    database.getConnection(function (err, connection) {
+      if (err) throw err;
       connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
         connection.release();
 
         if (error) throw error;
 
+        loggedInUser = results[0];
         res.status(200).json({
           status: 200,
           result: results[0]
@@ -141,7 +137,7 @@ let controller = {
     });
   },
   getUserById: (req, res, next) => {
-    dbconnection.getConnection(function (err, connection) {
+    database.getConnection(function (err, connection) {
       let id = req.params.id;
 
       if (err) throw err;
@@ -151,7 +147,6 @@ let controller = {
         if (error) throw error;
 
         if (results.length > 0) {
-          results = JSON.parse(JSON.stringify(results));
           res.status(200).json({
             status: 200,
             result: results
@@ -167,46 +162,55 @@ let controller = {
     });
   },
   updateUser: (req, res, next) => {
-    let user = req.body;
-    let id = req.params.id;
+    database.getConnection(function (err, connection) {
+      let id = req.params.id;
+      let { firstName, lastName, emailAdress, password, phoneNumber, street, city } = req.body;
 
-    let updatedUser = database.updateUser(id, user);
+      if (err) throw err;
 
-    if (updatedUser) {
-      res.status(200).json({
-        status: 200,
-        result: database.getAllUsers()
-      });
-      console.log("Update user with id: " + id);
-    } else {
-      const error = {
-        status: 400,
-        result: 'User not found'
-      };
-      next(error);
-    }
+      connection.query(
+        `UPDATE user SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ? WHERE id = ${id}; 
+        SELECT * FROM user;`,
+        [firstName, lastName, emailAdress, password, phoneNumber, street, city], function (error, results, fields) {
+          connection.release();
+          if (error) throw error;
+
+          if (results[0].affectedRows > 0) {
+            res.status(200).json({
+              status: 200,
+              result: results[1]
+            });
+          } else {
+            const error = {
+              status: 403,
+              result: 'Update failed'
+            };
+            next(error);
+          }
+        });
+    });
   },
   deleteUser: (req, res, next) => {
-    dbconnection.getConnection(function (err, connection) {
+    database.getConnection(function (err, connection) {
       let id = req.params.id;
 
       if (err) throw err;
 
-      connection.query(`DELETE FROM user WHERE id = ${id}`, function (error, results, fields) {
+      connection.query(`DELETE FROM user WHERE id = ${id}; SELECT * FROM user;`, function (error, results, fields) {
         if (error) throw error;
-        if (results.affectedRows == 0) {
+
+        if (results[0].affectedRows > 0) {
+          res.status(200).json({
+            status: 200,
+            result: results[1]
+          });
+        } else {
           const error = {
             status: 404,
             result: 'User not found'
           };
           next(error);
-        } else {
-          res.status(200).json({
-            status: 200,
-            result: getAllUsers()
-          });
         }
-        console.log(results);
       });
     });
   },
