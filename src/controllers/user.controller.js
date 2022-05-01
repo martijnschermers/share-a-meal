@@ -6,22 +6,21 @@ let database = new Database();
 
 let loggedInUser = null;
 
-const schema = Joi.object({
-  firstName: Joi.string().alphanum().required(),
-  lastName: Joi.string().alphanum().required(),
-  password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
-  email: Joi.string().email({ minDomainSegments: 2 }),
-});
-
 let controller = {
   validateUser: (req, res, next) => {
     let { firstName, lastName, emailAdress, password } = req.body;
+    const schema = Joi.object({
+      firstName: Joi.string().alphanum().required(),
+      lastName: Joi.string().alphanum().required(),
+      password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
+      email: Joi.string().email({ minDomainSegments: 2 }),
+    });
     const { error, value } = schema.validate({ firstName: firstName, lastName: lastName, email: emailAdress, password: password });
     if (error) {
       const err = {
         status: 400,
         // Error message wrapped variable in /""\ for some reason
-        result: error.message.toString().replace(/"/g, '')
+        result: error.message.replace(/"/g, '')
       };
       next(err);
     }
@@ -49,7 +48,7 @@ let controller = {
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err; 
 
-      connection.query('SELECT name FROM meal', function (error, results, fields) {
+      connection.query('SELECT * FROM user', function (error, results, fields) {
         connection.release();
 
         if (error) throw error;
@@ -77,38 +76,57 @@ let controller = {
     }
   },
   validateLogin: (req, res, next) => {
-    let user = req.body;
-    let { emailAdress, password } = user;
-    try {
-      assert(typeof (emailAdress) === 'string', 'emailAdress must be a string');
-      assert(typeof (password) === 'string', 'password must be a string');
-      next();
-    } catch (err) {
-      const error = {
-        status: 400,
-        result: err.message
+    let { emailAdress, password } = req.body;
+    const schema = Joi.object({
+      password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
+      email: Joi.string().email({ minDomainSegments: 2 }),
+    });
+    const { error, value } = schema.validate({ email: emailAdress, password: password });
+    if (error) {
+      const err = {
+        status: 401,
+        // Error message wrapped variable in /""\ for some reason
+        result: error.message.replace(/"/g, '')
       };
-      next(error);
+      next(err);
     }
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err; 
+
+      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}' AND password = '${password}'`, function (error, results, fields) {
+        connection.release();
+
+        if (error) throw error;
+
+        if (results.length > 0) {
+          next();
+        } else {
+          const error = {
+            status: 401,
+            result: 'Wrong email or password'
+          };
+          next(error);
+        }
+      });
+    });
   },
   login: (req, res, next) => {
-    let loginCredentials = req.body;
+    let { emailAdress } = req.body;
 
-    let user = database.loginUser(loginCredentials); 
-    if (user) {
-      loggedInUser = user;
-      res.status(200).json({
-        status: 200,
-        result: user
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err; 
+      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
+        connection.release();
+
+        if (error) throw error;
+
+        res.status(200).json({
+          status: 200,
+          result: results[0]
+        });
       });
-      console.log("Logged in with email: " + user.emailAdress + " and password: " + user.password);
-    } else {
-      const error = {
-        status: 401,
-        result: 'Invalid email or password'
-      };
-      next(error);
-    }
+    });
   },
   getUserById: (req, res, next) => {
     let id = req.params.id;
