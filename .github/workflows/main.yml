@@ -12,7 +12,7 @@ jobs:
       MYSQL_ROOT_PASSWORD: root # default root password to use must be 'root'
       DB_HOST: localhost
       DB_PORT: 3306
-      DB_DATABASE: share-a-meal
+      DB_DATABASE: share_a_meal
       DB_USER: root
       DB_PASSWORD: root
     services:
@@ -28,7 +28,7 @@ jobs:
           sudo /etc/init.d/mysql start
           sudo apt-get install -y mysql-client
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "SHOW DATABASES;"
-          mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE `${{env.DB_DATABASE}}`;"
+          mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE ${{env.DB_DATABASE}};"
       - name: Import the database
         run: |
           mysql -uroot -p${{env.MYSQL_ROOT_PASSWORD}} ${{env.DB_DATABASE}} < database.sql
