@@ -1,18 +1,39 @@
-const chai = require('chai'); 
+const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../../src/index');
+const database = require('../../database/database')
 
 chai.should();
 chai.use(chaiHttp);
 
+const CLEAR_MEAL_TABLE = 'DELETE IGNORE FROM `meal`;'
+const CLEAR_PARTICIPANTS_TABLE = 'DELETE IGNORE FROM `meal_participants_user`;'
+const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;'
+const CLEAR_DB = CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE + CLEAR_USERS_TABLE
+
+const INSERT_USER =
+  'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
+  '(1, "John", "Doe", "johndoe@gmail.com", "secret", "street", "city");'
+
 describe('Manager users', () => {
   beforeEach((done) => {
-    //TODO: Clear the database before each test
-    done();
+    database.getConnection(function (err, connection) {
+      if (err) throw err
+
+      connection.query(
+        CLEAR_DB + INSERT_USER,
+        function (error, results, fields) {
+          connection.release()
+
+          if (error) throw error
+          done()
+        }
+      );
+    });
   });
 
   describe('TC-101-1 /POST login', () => {
-    it('should not login a user without a emailAdress', (done) => {
+    it('it should not login a user without a emailAdress', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -24,13 +45,13 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql('email is required');
-        });          
+        });
       done();
     });
   });
 
   describe('TC-101-2 /POST login', () => {
-    it('should not login a user with a invalid emailAdress', (done) => {
+    it('it should not login a user with a invalid emailAdress', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -42,13 +63,13 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql('email must be a valid email');
-        });          
+        });
       done();
     });
   });
 
   describe('TC-101-3 /POST login', () => {
-    it('should not login a user with a invalid password', (done) => {
+    it('it should not login a user with a invalid password', (done) => {
       let user = {
         emailAdress: 'john@gmail',
         password: 'se'
@@ -61,13 +82,13 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
-        });          
+        });
       done();
     });
   });
 
   describe('TC-101-4 /POST login', () => {
-    it('should not login a user that does not exist', (done) => {
+    it('it should not login a user that does not exist', (done) => {
       let user = {
         emailAdress: 'john@hotmail.com',
         password: 'secret'
@@ -80,13 +101,13 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql(`Wrong email or password`);
-        });          
+        });
       done();
     });
   });
 
   describe('TC-101-5 /POST login', () => {
-    it('should return a user with a valid email and password', (done) => {
+    it('it should return a user with a valid email and password', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -107,7 +128,7 @@ describe('Manager users', () => {
           result.should.have.property('roles');
           result.should.have.property('street');
           result.should.have.property('city');
-        });          
+        });
       done();
     });
   });
@@ -131,7 +152,7 @@ describe('Manager users', () => {
           result.should.be.a('string').eql("password is required");
           done();
         }
-      );
+        );
     });
   });
 
@@ -155,7 +176,7 @@ describe('Manager users', () => {
           result.should.be.a('string').eql("email must be a valid email");
           done();
         }
-      );
+        );
     });
   });
 
@@ -179,7 +200,7 @@ describe('Manager users', () => {
           result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
           done();
         }
-      );
+        );
     });
   });
 
@@ -203,7 +224,7 @@ describe('Manager users', () => {
           result.should.be.a('string').eql('Emailaddress is already taken');
           done();
         }
-      );
+        );
     });
   });
 
@@ -227,7 +248,7 @@ describe('Manager users', () => {
           result.should.be.a('array');
           done();
         }
-      );
+        );
     });
   });
 
@@ -239,33 +260,33 @@ describe('Manager users', () => {
           res.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(200);
-          result.length.should.be.eql(6);
+          result.length.should.be.eql(1);
           done();
         });
     });
   });
 
-  describe('TC-205-4 /PUT user', () => {
+  describe('TC-205-6 /PUT user', () => {
     it('it should update a user', (done) => {
       let user = {
-        id: 1, 
+        id: 1,
         firstName: "John",
-        lastName: "Doe",
+        lastName: "Beton",
         street: "Lovensdijkstraat 61",
         city: "Breda",
         emailAdress: "johndoe@gmail.com",
         password: "secret"
       }
       chai.request(server)
-        .put('/api/user/0')
+        .put('/api/user/1')
         .send(user)
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(404);
-          result.should.be.a('string').eql('Update failed');
+          status.should.eql(200);
+          result.should.be.a('array');
           done();
         }
-      );
+        );
     });
   });
 });
