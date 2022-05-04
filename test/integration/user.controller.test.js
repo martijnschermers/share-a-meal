@@ -32,8 +32,8 @@ describe('Manager users', () => {
     });
   });
 
-  describe('TC-101-1 /POST login', () => {
-    it('it should not login a user without a emailAdress', (done) => {
+  describe('UC-101 Login', () => { 
+    it('TC-101-1 | it should not login a user without a emailAdress', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -48,10 +48,8 @@ describe('Manager users', () => {
         });
       done();
     });
-  });
 
-  describe('TC-101-2 /POST login', () => {
-    it('it should not login a user with a invalid emailAdress', (done) => {
+    it('TC-101-2 | it should not login a user with a invalid emailAdress', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -66,10 +64,8 @@ describe('Manager users', () => {
         });
       done();
     });
-  });
 
-  describe('TC-101-3 /POST login', () => {
-    it('it should not login a user with a invalid password', (done) => {
+    it('TC-101-3 | it should not login a user with a invalid password', (done) => {
       let user = {
         emailAdress: 'john@gmail',
         password: 'se'
@@ -85,10 +81,8 @@ describe('Manager users', () => {
         });
       done();
     });
-  });
 
-  describe('TC-101-4 /POST login', () => {
-    it('it should not login a user that does not exist', (done) => {
+    it('TC-101-4 | it should not login a user that does not exist', (done) => {
       let user = {
         emailAdress: 'john@hotmail.com',
         password: 'secret'
@@ -104,10 +98,8 @@ describe('Manager users', () => {
         });
       done();
     });
-  });
 
-  describe('TC-101-5 /POST login', () => {
-    it('it should return a user with a valid email and password', (done) => {
+    it('TC-101-5 | it should return a user with a valid email and password', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -133,8 +125,8 @@ describe('Manager users', () => {
     });
   });
 
-  describe('TC-201-1 /POST user', () => {
-    it('it should not POST a user without email or password field', (done) => {
+  describe('UC-201 /POST user', () => {
+    it('TC-201-1 | it should not POST a user without email or password field', (done) => {
       // User misses emailAdress and password field for testing 
       let user = {
         firstName: "John",
@@ -154,10 +146,8 @@ describe('Manager users', () => {
         }
         );
     });
-  });
 
-  describe('TC-201-2 /POST user', () => {
-    it('it should not POST a user with a invalid email', (done) => {
+    it('TC-201-2 | it should not POST a user with a invalid email', (done) => {
       let user = {
         firstName: "John",
         lastName: "Doe",
@@ -178,10 +168,8 @@ describe('Manager users', () => {
         }
         );
     });
-  });
 
-  describe('TC-201-3 /POST user', () => {
-    it('it should not POST a user with a invalid password', (done) => {
+    it('TC-201-3 | it should not POST a user with a invalid password', (done) => {
       let user = {
         firstName: "John",
         lastName: "Doe",
@@ -200,12 +188,10 @@ describe('Manager users', () => {
           result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
           done();
         }
-        );
+      );
     });
-  });
 
-  describe('TC-201-4 /POST user', () => {
-    it('it should not POST a user with an email that already exists', (done) => {
+    it('TC-201-4 | it should not POST a user with an email that already exists', (done) => {
       let user = {
         firstName: "John",
         lastName: "Doe",
@@ -224,12 +210,10 @@ describe('Manager users', () => {
           result.should.be.a('string').eql('Emailaddress is already taken');
           done();
         }
-        );
+      );
     });
-  });
 
-  describe('TC-201-5 /POST user', () => {
-    it('it should POST a user with valid parameters', (done) => {
+    it('TC-201-5 | it should POST a user with valid parameters', (done) => {
       let user = {
         firstName: "John",
         lastName: "Beton",
@@ -248,12 +232,12 @@ describe('Manager users', () => {
           result.should.be.a('array');
           done();
         }
-        );
+      );
     });
   });
 
-  describe('TC-202-1 /GET users', () => {
-    it('it should GET all the users', (done) => {
+  describe('UC-202 /GET users', () => {
+    it('TC-202-1 | it should GET all the users', (done) => {
       chai.request(server)
         .get('/api/user')
         .end((err, res) => {
@@ -262,12 +246,133 @@ describe('Manager users', () => {
           status.should.eql(200);
           result.length.should.be.eql(1);
           done();
-        });
+        }
+      );
     });
   });
 
-  describe('TC-205-6 /PUT user', () => {
-    it('it should update a user', (done) => {
+  describe('UC-203 /GET personal profile', () => {
+    it.skip('TC-203-1 | it should not get a user, because of a invalid token', (done) => {
+      chai.request(server)
+        .get('/api/user/profile')
+        .set('Authorization', 'Bearer invalidToken')
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(401);
+          result.should.be.a('string').eql('Invalid token');
+          done();
+        }
+      );
+    });
+
+    it.skip('TC-203-2 | it should get a user, because of a valid token and an existing user', (done) => {
+      let token = '';
+      chai.request(server)
+        .get('/api/user/profile')
+        .set('Authorization', 'Bearer ' + token)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.a('object');
+        });
+      done();
+    });
+  });
+
+  describe('UC-204 /GET user details', () => {
+    it.skip('TC-204-1 | it should not get a user, because of a invalid token', (done) => {
+      chai.request(server)
+        .get('/api/user/1')
+        .set('Authorization', 'Bearer invalidToken')
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(401);
+          result.should.be.a('string').eql('Invalid token');
+          done();
+        }
+      );
+    });
+
+    it.skip('TC-204-2 | it should not get a user, because of a invalid user id', (done) => {
+      chai.request(server)
+        .get('/api/user/1')
+        .set('Authorization', 'Bearer ' + token)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(404);
+          result.should.be.a('string').eql('User not found');
+          done();
+        }
+      );
+    });
+
+    it.skip('TC-204-3 | it should get a user, because of a valid token and an existing user', (done) => {
+      chai.request(server)
+        .get('/api/user/1')
+        .set('Authorization', 'Bearer ' + token)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.a('object');
+          done();
+        }
+      );
+    });
+  });
+
+  describe('UC-205 /PUT user', () => {
+    it('TC-205-1 | it should not update a user with a missing required field', (done) => {
+      let user = {
+        id: 1,
+        firstName: "John",
+        lastName: "Beton",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        // Email is missing
+        password: "secret",
+        phoneNumber: "06 12425475"
+      }
+      chai.request(server)
+        .put('/api/user/1')
+        .send(user)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql('email is required');
+          done();
+        }
+      );
+    });
+
+    it('TC-205-2 | it should not update a user with a invalid email', (done) => {
+      let user = {
+        id: 1,
+        firstName: "John",
+        lastName: "Beton",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        emailAdress: "johndoe@gmail",
+        password: "secret",
+        phoneNumber: "06 12425475"
+      }
+      chai.request(server)
+        .put('/api/user/1')
+        .send(user)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql('email must be a valid email');
+          done();
+        }
+      );
+    });
+
+    it('TC-205-3 | it should not update a user with a invalid phone number', (done) => {
       let user = {
         id: 1,
         firstName: "John",
@@ -275,7 +380,77 @@ describe('Manager users', () => {
         street: "Lovensdijkstraat 61",
         city: "Breda",
         emailAdress: "johndoe@gmail.com",
-        password: "secret"
+        password: "secret",
+        phoneNumber: "invalidPhoneNumber"
+      }
+      chai.request(server)
+        .put('/api/user/1')
+        .send(user)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql('phoneNumber length must be 10 characters long');
+          done();
+        }
+      );
+    });
+    
+    it('TC-205-4 | it should not update a user that does not exist', (done) => {
+      let user = {
+        id: 1,
+        firstName: "John",
+        lastName: "Beton",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        emailAdress: "johndoe@gmail.com",
+        password: "secret",
+        phoneNumber: "0612425475"
+      }
+      chai.request(server)
+        .put('/api/user/0')
+        .send(user)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(404);
+          result.should.be.a('string').eql('User does not exist');
+          done();
+        }
+      );
+    });
+
+    it.skip('TC-205-5 | it should not update a user when there is no logged in user', (done) => {
+      let user = {
+        id: 1,
+        firstName: "John",
+        lastName: "Beton",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        emailAdress: "johndoe@gmail.com",
+        password: "secret",
+        phoneNumber: "06 12425475"
+      }
+      chai.request(server)
+        .put('/api/user/1')
+        .send(user)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql('you need to be logged in to update a user');
+          done();
+        }
+      );
+    });
+
+    it('TC-205-6 | it should update a user', (done) => {
+      let user = {
+        id: 1,
+        firstName: "John",
+        lastName: "Beton",
+        street: "Lovensdijkstraat 61",
+        city: "Breda",
+        emailAdress: "johnbeton@gmail.com",
+        password: "secret",
+        phoneNumber: "0612425475"
       }
       chai.request(server)
         .put('/api/user/1')
@@ -286,7 +461,45 @@ describe('Manager users', () => {
           result.should.be.a('array');
           done();
         }
-        );
+      );
+    });
+  });
+
+  describe('UC-206 /DELETE user', () => {
+    it('TC-206-1 | it should not delete a user that does not exist', (done) => {
+      chai.request(server)
+        .delete('/api/user/0')
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(404);
+          result.should.be.a('string').eql('User not found');
+          done();
+        }
+      );
+    });
+
+    it.skip('TC-206-2 | it should not delete a user when there is no logged in user', (done) => {
+      chai.request(server)
+        .delete('/api/user/1')
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(400);
+          result.should.be.a('string').eql('you need to be logged in to delete a user');
+          done();
+        }
+      );
+    });
+
+    it('TC-206-3 | it should delete a user', (done) => {
+      chai.request(server)
+        .delete('/api/user/1')
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.a('array');
+          done();
+        }
+      );
     });
   });
 });
