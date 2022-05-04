@@ -161,6 +161,26 @@ let controller = {
       });
     });
   },
+  validateUpdate: (req, res, next) => {
+    let { firstName, lastName, emailAdress, password, phoneNumber } = req.body;
+    const schema = Joi.object({
+      firstName: Joi.string().alphanum().required(),
+      lastName: Joi.string().alphanum().required(),
+      password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
+      email: Joi.string().email({ minDomainSegments: 2 }).required(),
+      phoneNumber: Joi.string().length(10).pattern(/^\d+$/).required(),
+    });
+    const { error } = schema.validate({ firstName: firstName, lastName: lastName, email: emailAdress, password: password, phoneNumber: phoneNumber });
+    if (error) {
+      const err = {
+        status: 400,
+        // Error message wrapped variable in /" "\ for some reason
+        result: error.message.replace(/"/g, '')
+      };
+      next(err);
+    }
+    next();
+  },
   updateUser: (req, res, next) => {
     database.getConnection(function (err, connection) {
       let id = req.params.id;
@@ -183,7 +203,7 @@ let controller = {
           } else {
             const error = {
               status: 404,
-              result: 'Update failed'
+              result: 'User does not exist'
             };
             next(error);
           }
