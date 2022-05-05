@@ -1,5 +1,6 @@
 const express = require('express')
 const userRouter = require('./routes/user.routes');
+const mealRouter = require('./routes/meal.routes');
 const app = express()
 
 require('dotenv').config();
@@ -14,6 +15,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api', userRouter); 
+app.use('/api', mealRouter); 
 
 app.use((req, res) => {
   res.status(404).json({
