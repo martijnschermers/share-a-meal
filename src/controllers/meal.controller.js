@@ -1,7 +1,16 @@
 const Joi = require('joi');
 const database = require('../../database/database');
 
-let loggedInUser = null;
+// Placeholder for the time being, login functionality will be added later
+let loggedInUser = {
+  id: 1, 
+  firstName: "John",
+  lastName: "Beton",
+  street: "Lovensdijkstraat 61",
+  city: "Breda",
+  password: "secret",
+  emailAdress: "johndoe@gmail.com"
+}
 
 let controller = {
   validateMeal: (req, res, next) => {
@@ -152,25 +161,44 @@ let controller = {
 
       if (err) throw err;
 
-      connection.query(`SELECT * FROM meal WHERE id = ${id};`, function (error, results, fields) {
+      connection.query(`SELECT * FROM meal WHERE id = ${id}; SELECT * FROM meal_participants_user WHERE mealId = ${id}`, function (error, results, fields) {
         if (error) throw error;
 
-        if (results.length > 0) {
-          // if (results[0].participants.length > results[0].maxAmountOfParticipants) {
+        if (results[0].length > 0) {
+          if (loggedInUser) {
+            if (results[1][0].userId == loggedInUser.id) {
+              connection.query(`DELETE FROM meal_participants_user WHERE userId = ${loggedInUser.id} AND mealId = ${id};`, function (error, results, fields) {
+                if (error) throw error;
+              });
+            } else {
+              if (results[1].length < results[0][0].maxAmountOfParticipants) {
+                connection.query('INSERT INTO meal_participants_user SET ?; SELECT * FROM meal_participants_user;', { mealId: id, userId: loggedInUser.id }, function (error, results, fields) {
+                  connection.release();
+                  if (error) throw error;
+                });
+              } else {
+                const error = {
+                  status: 400,
+                  result: 'Meal is full'
+                };
+                next(error);
+              }
+            }
+
             res.status(200).json({
               status: 200,
               result: {
                 currentlyParticipating: true,
-                currentAmountOfParticipants: results[0].maxAmountOfParticipants,
+                currentAmountOfParticipants: results[1].length,
               }
             });
-          // } else {
-          //   const error = {
-          //     status: 400,
-          //     result: 'Meal is full'
-          //   };
-          //   next(error);
-          // }
+          } else {
+            const error = {
+              status: 401,
+              result: 'You need to be logged in to participate'
+            }
+            next(error);
+          }
         } else {
           const error = {
             status: 404,
