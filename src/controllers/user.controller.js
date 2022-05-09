@@ -19,7 +19,7 @@ let controller = {
       const err = {
         status: 400,
         // Error message wrapped variable in /" "\ for some reason
-        result: error.message.replace(/"/g, '')
+        message: error.message.replace(/"/g, '')
       };
       next(err);
     }

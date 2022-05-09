@@ -144,9 +144,9 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           res.body.should.be.a('object');
-          let { status, result } = res.body;
+          let { status, message } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql("password is required");
+          message.should.be.a('string').eql("password is required");
           done();
         }
       );
@@ -166,9 +166,9 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           res.body.should.be.a('object');
-          let { status, result } = res.body;
+          let { status, message } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql("emailAdress must be a valid email");
+          message.should.be.a('string').eql("emailAdress must be a valid email");
           done();
         }
       );
@@ -188,9 +188,9 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           res.body.should.be.a('object');
-          let { status, result } = res.body;
+          let { status, message } = res.body;
           status.should.eql(400);
-          result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
+          message.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
           done();
         }
       );
