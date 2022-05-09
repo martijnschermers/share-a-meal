@@ -93,9 +93,9 @@ let controller = {
     let { emailAdress, password } = req.body;
     const schema = Joi.object({
       password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
-      email: Joi.string().email({ minDomainSegments: 2 }).required(),
+      emailAdress: Joi.string().email({ minDomainSegments: 2 }).required(),
     });
-    const { error } = schema.validate({ email: emailAdress, password: password });
+    const { error } = schema.validate({ emailAdress: emailAdress, password: password });
     if (error) {
       const err = {
         status: 400,
