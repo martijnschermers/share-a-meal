@@ -106,6 +106,19 @@ let controller = {
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
+      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
+        connection.release();
+        if (error) throw error;
+
+        if (results.length === 0) {
+          const err = {
+            status: 401,
+            result: 'User not found'
+          };
+          next(err);
+        }
+      });
+
       connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}' AND password = '${password}'`, function (error, results, fields) {
         connection.release();
 
@@ -115,8 +128,8 @@ let controller = {
           next();
         } else {
           const error = {
-            status: 400,
-            result: 'Wrong email or password'
+            status: 401,
+            result: 'Invalid password'
           };
           next(error);
         }
