@@ -5,14 +5,16 @@ let loggedInUser = null;
 
 let controller = {
   validateUser: (req, res, next) => {
-    let { firstName, lastName, emailAdress, password } = req.body;
+    let user = req.body;
     const schema = Joi.object({
       firstName: Joi.string().alphanum().required(),
       lastName: Joi.string().alphanum().required(),
       password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
-      email: Joi.string().email({ minDomainSegments: 2 }),
+      street: Joi.string().required(),
+      city: Joi.string().alphanum().required(),
+      emailAdress: Joi.string().email({ minDomainSegments: 2 }),
     });
-    const { error } = schema.validate({ firstName: firstName, lastName: lastName, email: emailAdress, password: password });
+    const { error } = schema.validate(user);
     if (error) {
       const err = {
         status: 400,
