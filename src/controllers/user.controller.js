@@ -68,19 +68,24 @@ let controller = {
     });
   },
   getProfile: (req, res, next) => {
-    if (loggedInUser) {
-      res.status(200).json({
-        status: 200,
-        result: loggedInUser
-      });
-      console.log("Get personal profile");
-    } else {
-      const error = {
-        status: 401,
-        result: 'No user logged in'
-      };
-      next(error);
-    }
+    res.status(501).json({
+      status: 501,
+      result: 'Not implemented'
+    });
+
+    // if (loggedInUser) {
+    //   res.status(200).json({
+    //     status: 200,
+    //     result: loggedInUser
+    //   });
+    //   console.log("Get personal profile");
+    // } else {
+    //   const error = {
+    //     status: 401,
+    //     result: 'No user logged in'
+    //   };
+    //   next(error);
+    // }
   },
   validateLogin: (req, res, next) => {
     let { emailAdress, password } = req.body;
