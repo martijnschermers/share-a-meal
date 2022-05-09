@@ -61,7 +61,7 @@ describe('Manager users', () => {
           let { status, result } = res.body;
           status.should.eql(400);
           res.body.should.be.an('object');
-          result.should.be.a('string').eql('email must be a valid email');
+          result.should.be.a('string').eql('emailAdress must be a valid email');
           done();
         }
       );
