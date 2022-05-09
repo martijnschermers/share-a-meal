@@ -45,8 +45,9 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql('email is required');
-        });
-      done();
+          done();
+        }
+      );
     });
 
     it('TC-101-2 | it should not login a user with a invalid emailAdress', (done) => {
@@ -61,8 +62,9 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql('email must be a valid email');
-        });
-      done();
+          done();
+        }
+      );
     });
 
     it('TC-101-3 | it should not login a user with a invalid password', (done) => {
@@ -78,8 +80,9 @@ describe('Manager users', () => {
           status.should.eql(400);
           res.body.should.be.an('object');
           result.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
-        });
-      done();
+          done();
+        }
+      );
     });
 
     it('TC-101-4 | it should not login a user that does not exist', (done) => {
@@ -92,11 +95,12 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(400);
+          status.should.eql(401);
           res.body.should.be.an('object');
-          result.should.be.a('string').eql(`Wrong email or password`);
-        });
-      done();
+          result.should.be.a('string').eql('User not found');
+          done();
+        }
+      );
     });
 
     it('TC-101-5 | it should return a user with a valid email and password', (done) => {
@@ -120,8 +124,9 @@ describe('Manager users', () => {
           result.should.have.property('roles');
           result.should.have.property('street');
           result.should.have.property('city');
-        });
-      done();
+          done();
+        }
+      );
     });
   });
 
@@ -144,7 +149,7 @@ describe('Manager users', () => {
           result.should.be.a('string').eql("password is required");
           done();
         }
-        );
+      );
     });
 
     it('TC-201-2 | it should not POST a user with a invalid email', (done) => {
@@ -166,7 +171,7 @@ describe('Manager users', () => {
           result.should.be.a('string').eql("email must be a valid email");
           done();
         }
-        );
+      );
     });
 
     it('TC-201-3 | it should not POST a user with a invalid password', (done) => {
@@ -267,17 +272,17 @@ describe('Manager users', () => {
     });
 
     it.skip('TC-203-2 | it should get a user, because of a valid token and an existing user', (done) => {
-      let token = '';
       chai.request(server)
         .get('/api/user/profile')
-        .set('Authorization', 'Bearer ' + token)
+        .set('Authorization', 'Bearer invalidToken')
         .end((err, res) => {
           res.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(200);
           result.should.be.a('object');
-        });
-      done();
+          done();
+        }
+      );
     });
   });
 
@@ -296,10 +301,9 @@ describe('Manager users', () => {
       );
     });
 
-    it.skip('TC-204-2 | it should not get a user, because of a invalid user id', (done) => {
+    it('TC-204-2 | it should not get a user, because of a invalid user id', (done) => {
       chai.request(server)
-        .get('/api/user/1')
-        .set('Authorization', 'Bearer ' + token)
+        .get('/api/user/0')
         .end((err, res) => {
           res.should.be.a('object');
           let { status, result } = res.body;
@@ -310,15 +314,14 @@ describe('Manager users', () => {
       );
     });
 
-    it.skip('TC-204-3 | it should get a user, because of a valid token and an existing user', (done) => {
+    it('TC-204-3 | it should get a user, because an existing user', (done) => {
       chai.request(server)
         .get('/api/user/1')
-        .set('Authorization', 'Bearer ' + token)
         .end((err, res) => {
           res.should.be.a('object');
           let { status, result } = res.body;
           status.should.eql(200);
-          result.should.be.a('object');
+          result.should.be.a('array');
           done();
         }
       );
@@ -335,7 +338,7 @@ describe('Manager users', () => {
         city: "Breda",
         // Email is missing
         password: "secret",
-        phoneNumber: "06 12425475"
+        phoneNumber: "0612425475"
       }
       chai.request(server)
         .put('/api/user/1')
@@ -358,7 +361,7 @@ describe('Manager users', () => {
         city: "Breda",
         emailAdress: "johndoe@gmail",
         password: "secret",
-        phoneNumber: "06 12425475"
+        phoneNumber: "0612425475"
       }
       chai.request(server)
         .put('/api/user/1')
@@ -427,7 +430,7 @@ describe('Manager users', () => {
         city: "Breda",
         emailAdress: "johndoe@gmail.com",
         password: "secret",
-        phoneNumber: "06 12425475"
+        phoneNumber: "0612425475"
       }
       chai.request(server)
         .put('/api/user/1')
