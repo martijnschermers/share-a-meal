@@ -46,7 +46,7 @@ let controller = {
           });
         } else {
           const err = {
-            status: 401,
+            status: 409,
             result: 'Emailaddress is already taken'
           };
           next(err);

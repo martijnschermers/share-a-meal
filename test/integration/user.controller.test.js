@@ -211,7 +211,7 @@ describe('Manager users', () => {
         .end((err, res) => {
           res.body.should.be.a('object');
           let { status, result } = res.body;
-          status.should.eql(401);
+          status.should.eql(409);
           result.should.be.a('string').eql('Emailaddress is already taken');
           done();
         }
