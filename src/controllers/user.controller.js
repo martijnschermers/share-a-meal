@@ -199,13 +199,30 @@ let controller = {
       };
       next(err);
     }
+
+    database.getConnection(function (err, connection) {
+      if (err) throw err;
+
+      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
+        connection.release();
+        if (error) throw error;
+
+        if (results.length > 0) {
+          const err = {
+            status: 409,
+            result: 'Emailadress is already taken'
+          };
+          next(err);
+        }
+      });
+    }),
     next();
   },
   updateUser: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let id = req.params.id;
-      let { firstName, lastName, emailAdress, password, phoneNumber, street, city } = req.body;
+    let id = req.params.id;
+    let { firstName, lastName, emailAdress, password, phoneNumber, street, city } = req.body;
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       connection.query(
