@@ -199,23 +199,6 @@ let controller = {
       };
       next(err);
     }
-
-    database.getConnection(function (err, connection) {
-      if (err) throw err;
-
-      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
-        connection.release();
-        if (error) throw error;
-
-        if (results.length > 0) {
-          const err = {
-            status: 409,
-            result: 'Emailadress is already taken'
-          };
-          next(err);
-        }
-      });
-    }),
     next();
   },
   updateUser: (req, res, next) => {
@@ -225,26 +208,38 @@ let controller = {
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query(
-        `UPDATE user SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ? WHERE id = ${id}; 
-        SELECT * FROM user WHERE id = ${id};`,
-        [firstName, lastName, emailAdress, password, phoneNumber, street, city], function (error, results, fields) {
-          connection.release();
-          if (error) throw error;
+      connection.query(`SELECT * FROM user WHERE id = ${id}; SELECT * FROM user WHERE emailAdress = '${emailAdress}';`, function (error, results, fields) {
+        if (error) throw error;
 
-          if (results[0].affectedRows > 0) {
-            res.status(200).json({
-              status: 200,
-              result: results[1]
-            });
+        if (results[0].length > 0) {
+          if (results[1].length === 0) {
+            connection.query(
+              `UPDATE user SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ? WHERE id = ${id}; 
+              SELECT * FROM user WHERE id = ${id};`,
+              [firstName, lastName, emailAdress, password, phoneNumber, street, city], function (error, results, fields) {
+                connection.release();
+                if (error) throw error;
+
+                res.status(200).json({
+                  status: 200,
+                  result: results[1]
+                });
+              });
           } else {
             const error = {
-              status: 400,
-              result: 'User does not exist'
+              status: 409,
+              result: 'Email already in use'
             };
             next(error);
           }
-        });
+        } else {
+          const error = {
+            status: 400,
+            result: 'User does not exist'
+          };
+          next(error);
+        }
+      });
     });
   },
   deleteUser: (req, res, next) => {
