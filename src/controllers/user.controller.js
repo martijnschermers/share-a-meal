@@ -210,7 +210,7 @@ let controller = {
 
       connection.query(
         `UPDATE user SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ? WHERE id = ${id}; 
-        SELECT * FROM user;`,
+        SELECT * FROM user WHERE id = ${id};`,
         [firstName, lastName, emailAdress, password, phoneNumber, street, city], function (error, results, fields) {
           connection.release();
           if (error) throw error;
