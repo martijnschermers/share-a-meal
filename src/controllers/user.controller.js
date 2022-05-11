@@ -39,8 +39,8 @@ let controller = {
             connection.release();
             if (error) throw error;
 
-            res.status(200).json({
-              status: 200,
+            res.status(201).json({
+              status: 201,
               result: results[1]
             });
           });
@@ -222,7 +222,7 @@ let controller = {
             });
           } else {
             const error = {
-              status: 404,
+              status: 400,
               result: 'User does not exist'
             };
             next(error);
@@ -246,7 +246,7 @@ let controller = {
           });
         } else {
           const error = {
-            status: 404,
+            status: 400,
             result: 'User not found'
           };
           next(error);

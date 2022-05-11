@@ -233,7 +233,7 @@ describe('Manager users', () => {
         .end((err, res) => {
           res.body.should.be.a('object');
           let { status, result } = res.body;
-          status.should.eql(200);
+          status.should.eql(201);
           result.should.be.a('array');
           done();
         }
@@ -414,7 +414,7 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(404);
+          status.should.eql(400);
           result.should.be.a('string').eql('User does not exist');
           done();
         }
@@ -474,7 +474,7 @@ describe('Manager users', () => {
         .delete('/api/user/0')
         .end((err, res) => {
           let { status, result } = res.body;
-          status.should.eql(404);
+          status.should.eql(400);
           result.should.be.a('string').eql('User not found');
           done();
         }
