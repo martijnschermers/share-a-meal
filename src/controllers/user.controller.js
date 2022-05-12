@@ -55,10 +55,30 @@ let controller = {
     });
   },
   getAllUsers: (req, res) => {
+    let { name, isActive } = req.query;
+    let query = 'SELECT * FROM user';
+
+    if (name || isActive) {
+      query += ' WHERE ';
+      if (name) {
+        query += `firstName LIKE "%${name}%"`;
+      }
+
+      if (name && isActive) {
+        query += ' AND ';
+      }
+
+      if (isActive) {
+        query += `isActive = ${isActive}`;
+      }
+    }
+
+    query += ';';
+
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query('SELECT * FROM user', function (error, results, fields) {
+      connection.query(query, function (error, results, fields) {
         connection.release();
         if (error) throw error;
 
@@ -80,7 +100,6 @@ let controller = {
     //     status: 200,
     //     result: loggedInUser
     //   });
-    //   console.log("Get personal profile");
     // } else {
     //   const error = {
     //     status: 401,
