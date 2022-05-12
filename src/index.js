@@ -1,6 +1,7 @@
 const express = require('express')
 const userRouter = require('./routes/user.routes');
 const mealRouter = require('./routes/meal.routes');
+const authRouter = require('./routes/auth.routes');
 const app = express()
 
 require('dotenv').config();
@@ -15,6 +16,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api', userRouter); 
+app.use('/api', authRouter);
 app.use('/api', mealRouter); 
 
 app.use((req, res) => {
