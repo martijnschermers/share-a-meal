@@ -45,7 +45,7 @@ let controller = {
         } else {
           const err = {
             status: 409,
-            result: 'Emailaddress is already taken'
+            message: 'Emailaddress is already taken'
           };
           next(err);
         }
@@ -105,7 +105,7 @@ let controller = {
           } else {
             const err = {
               status: 404,
-              result: 'User not found'
+              message: 'User not found'
             };
             next(err);
           }
@@ -114,7 +114,7 @@ let controller = {
     } else {
       const error = {
         status: 401,
-        result: 'No user logged in'
+        message: 'No user logged in'
       };
       next(error);
     }
@@ -137,7 +137,7 @@ let controller = {
         } else {
           const error = {
             status: 404,
-            result: 'User not found'
+            message: 'User not found'
           };
           next(error);
         }
@@ -158,7 +158,7 @@ let controller = {
       const err = {
         status: 400,
         // Error message wrapped variable in /" "\ for some reason
-        result: error.message.replace(/"/g, '')
+        message: error.message.replace(/"/g, '')
       };
       next(err);
     }
@@ -191,14 +191,14 @@ let controller = {
           } else {
             const error = {
               status: 409,
-              result: 'Email already in use'
+              message: 'Email already in use'
             };
             next(error);
           }
         } else {
           const error = {
             status: 400,
-            result: 'User does not exist'
+            message: 'User does not exist'
           };
           next(error);
         }
@@ -222,7 +222,7 @@ let controller = {
         } else {
           const error = {
             status: 400,
-            result: 'User not found'
+            message: 'User not found'
           };
           next(error);
         }

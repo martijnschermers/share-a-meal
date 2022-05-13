@@ -40,7 +40,7 @@ let controller = {
       const err = {
         status: 400,
         // Error message wrapped variable in /""\ for some reason
-        result: error.message.replace(/"/g, '')
+        message: error.message.replace(/"/g, '')
       };
       next(err);
     }
@@ -66,7 +66,7 @@ let controller = {
               if (err) throw err;
               res.status(200).json({
                 status: 200,
-                results: { user, token },
+                result: { ...user, token },
               });
             });
           } else {
@@ -79,7 +79,7 @@ let controller = {
         } else {
           const err = {
             status: 401,
-            result: 'User not found'
+            message: 'User not found'
           };
           next(err);
         }
