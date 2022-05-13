@@ -1,8 +1,6 @@
 const Joi = require('joi');
 const database = require('../../database/database');
 
-let loggedInUser = null;
-
 let controller = {
   validateUser: (req, res, next) => {
     let user = req.body;
@@ -90,23 +88,36 @@ let controller = {
     });
   },
   getProfile: (req, res, next) => {
-    res.status(501).json({
-      status: 501,
-      result: 'Not implemented'
-    });
+    let id = req.userId;
+    if (id) {
+      database.getConnection(function (err, connection) {
+        if (err) throw err;
 
-    // if (loggedInUser) {
-    //   res.status(200).json({
-    //     status: 200,
-    //     result: loggedInUser
-    //   });
-    // } else {
-    //   const error = {
-    //     status: 401,
-    //     result: 'No user logged in'
-    //   };
-    //   next(error);
-    // }
+        connection.query('SELECT * FROM user WHERE id = ?;', [id], function (error, results, fields) {
+          connection.release();
+          if (error) throw error;
+
+          if (results.length > 0) {
+            res.status(200).json({
+              status: 200,
+              result: results[0]
+            });
+          } else {
+            const err = {
+              status: 404,
+              result: 'User not found'
+            };
+            next(err);
+          }
+        });
+      });
+    } else {
+      const error = {
+        status: 401,
+        result: 'No user logged in'
+      };
+      next(error);
+    }
   },
   getUserById: (req, res, next) => {
     database.getConnection(function (err, connection) {
