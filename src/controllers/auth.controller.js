@@ -1,30 +1,33 @@
 const Joi = require('joi');
 const database = require('../../database/database');
 const jwt = require('jsonwebtoken');
-
-let loggedInUser = null;
+require('dotenv').config(); 
 
 let controller = {
   validateToken: (req, res, next) => {
-    let token = req.headers.authorization;
-    if (!token) {
+    let header = req.headers.authorization;
+    if (header) {
+      let token = header.substring(7, header.length);
+
+      jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+        if (err) {
+          const error = {
+            status: 401,
+            message: 'Invalid token.'
+          }
+          next(error);
+        } else {
+          req.userId = payload.userId;
+          next();
+        }
+      });
+    } else {
       const error = {
         status: 401,
-        message: 'Unauthorized'
+        message: 'Authorization header missing.'
       }
       next(error);
     }
-    jwt.verify(token, 'secret', (err, decoded) => {
-      if (err) {
-        const error = {
-          status: 401,
-          message: 'Unauthorized'
-        }
-        next(error);
-      }
-      loggedInUser = decoded;
-      next();
-    });
   },
   validateLogin: (req, res, next) => {
     let { emailAdress, password } = req.body;
@@ -41,6 +44,10 @@ let controller = {
       };
       next(err);
     }
+    next();
+  },
+  login: (req, res, next) => {
+    let { emailAdress, password } = req.body;
 
     database.getConnection(function (err, connection) {
       if (err) throw err;
@@ -49,58 +56,33 @@ let controller = {
         connection.release();
         if (error) throw error;
 
-        if (results.length === 0) {
+        if (results.length > 0) {
+          let user = results[0]; 
+          if (user.password === password) {
+            const payload = {
+              userId: user.id,
+            }
+            jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, function(err, token) {
+              if (err) throw err;
+              res.status(200).json({
+                status: 200,
+                results: { user, token },
+              });
+            });
+          } else {
+            const error = {
+              status: 401,
+              message: 'Invalid password.'
+            }
+            next(error);
+          }
+        } else {
           const err = {
             status: 401,
             result: 'User not found'
           };
           next(err);
         }
-      });
-
-      connection.query('SELECT * FROM user WHERE emailAdress = ? AND password = ?', [emailAdress, password], function (error, results, fields) {
-        connection.release();
-
-        if (error) throw error;
-
-        if (results.length > 0) {
-          next();
-        } else {
-          const error = {
-            status: 401,
-            result: 'Invalid password'
-          };
-          next(error);
-        }
-      });
-    });
-  },
-  login: (req, res) => {
-    let { emailAdress } = req.body;
-
-    let query = `SELECT * FROM user WHERE emailAdress = ?;`;
-
-    database.getConnection(function (err, connection) {
-      if (err) throw err;
-      connection.query(query, [emailAdress], function (error, results, fields) {
-        connection.release();
-
-        if (error) throw error;
-        loggedInUser = results[0];
-
-        jwt.sign({ id: loggedInUser.id }, 'privateKey' /* process.env.JWT_SECRET */, { expiresIn: '7d'}, function(err, token) {
-          if (err) console.log(err);
-          if (token) {
-            console.log(token);
-            res.status(200).json({
-              status: 200,
-              result: {
-                token: token,
-                user: loggedInUser
-              }
-            });
-          }
-        });
       });
     });
   },
