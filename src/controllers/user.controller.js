@@ -28,7 +28,7 @@ let controller = {
       let user = req.body;
 
       if (err) throw err;
-      connection.query('SELECT * FROM user', function (error, results, fields) {
+      connection.query('SELECT * FROM user;', function (error, results, fields) {
         if (error) throw error;
 
         if (results.filter(item => item.emailAdress === user.emailAdress).length === 0) {
@@ -125,7 +125,7 @@ let controller = {
 
       if (err) throw err;
 
-      connection.query(`SELECT * FROM user WHERE id = ${id}`, function (error, results, fields) {
+      connection.query('SELECT * FROM user WHERE id = ?;', [id], function (error, results, fields) {
         connection.release();
         if (error) throw error;
 
@@ -171,15 +171,15 @@ let controller = {
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query(`SELECT * FROM user WHERE id = ${id}; SELECT * FROM user WHERE emailAdress = '${emailAdress}';`, function (error, results, fields) {
+      connection.query('SELECT * FROM user WHERE id = ?; SELECT * FROM user WHERE emailAdress = ?;', [id, emailAdress], function (error, results, fields) {
         if (error) throw error;
 
         if (results[0].length > 0) {
           if (results[1].length === 0) {
             connection.query(
-              `UPDATE user SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ? WHERE id = ${id}; 
-              SELECT * FROM user WHERE id = ${id};`,
-              [firstName, lastName, emailAdress, password, phoneNumber, street, city], function (error, results, fields) {
+              `UPDATE user SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ? WHERE id = ?; 
+              SELECT * FROM user WHERE id = ?;`,
+              [firstName, lastName, emailAdress, password, phoneNumber, street, city, id, id], function (error, results, fields) {
                 connection.release();
                 if (error) throw error;
 
@@ -211,7 +211,7 @@ let controller = {
 
       if (err) throw err;
 
-      connection.query(`DELETE FROM user WHERE id = ${id}; SELECT * FROM user;`, function (error, results, fields) {
+      connection.query(`DELETE FROM user WHERE id = ?; SELECT * FROM user;`, [id], function (error, results, fields) {
         if (error) throw error;
 
         if (results[0].affectedRows > 0) {
