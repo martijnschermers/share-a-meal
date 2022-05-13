@@ -1,20 +1,22 @@
 const express = require('express')
 const userRouter = require('./routes/user.routes');
 const mealRouter = require('./routes/meal.routes');
+const authRouter = require('./routes/auth.routes');
 const app = express()
 
 require('dotenv').config();
 const port = process.env.PORT;
 
-app.use(express.static('public'))
 app.use(express.json())
 
 app.get('/', (req, res) => {
-  res.sendFile('index.html')
-  res.sendFile('style.css')
+  res.status(200).send(
+    '<h1>Hello World!</h1><h2>This is the backend server for the Share a Meal Android app.</h2><p>For more info visit the <a href="https://github.com/martijnschermers/share-a-meal">Github repo</a></p>'
+  );
 })
 
 app.use('/api', userRouter); 
+app.use('/api', authRouter);
 app.use('/api', mealRouter); 
 
 app.use((req, res) => {

@@ -65,7 +65,7 @@ let controller = {
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query('SELECT * FROM meal', function (error, results, fields) {
+      connection.query('SELECT * FROM meal;', function (error, results, fields) {
         connection.release();
         if (error) throw error;
 
@@ -82,7 +82,7 @@ let controller = {
 
       if (err) throw err;
 
-      connection.query(`SELECT * FROM meal WHERE id = ${id}`, function (error, results, fields) {
+      connection.query('SELECT * FROM meal WHERE id = ?;', [id], function (error, results, fields) {
         connection.release();
         if (error) throw error;
 
@@ -110,9 +110,9 @@ let controller = {
       if (err) throw err;
 
       connection.query(
-        `UPDATE meal SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, imageUrl = ?, allergenes = ?, maxAmountOfParticipants = ?, price = ? WHERE id = ${id}; 
+        `UPDATE meal SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, imageUrl = ?, allergenes = ?, maxAmountOfParticipants = ?, price = ? WHERE id = ?; 
         SELECT * FROM meal;`,
-        [name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, convertedAllergenes, maxAmountOfParticipants, price], function (error, results, fields) {
+        [name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, convertedAllergenes, maxAmountOfParticipants, price, id], function (error, results, fields) {
           connection.release();
           if (error) throw error;
 
@@ -137,7 +137,7 @@ let controller = {
 
       if (err) throw err;
 
-      connection.query(`DELETE FROM meal WHERE id = ${id}; SELECT * FROM meal;`, function (error, results, fields) {
+      connection.query(`DELETE FROM meal WHERE id = ?; SELECT * FROM meal;`, [id], function (error, results, fields) {
         if (error) throw error;
 
         if (results[0].affectedRows > 0) {
