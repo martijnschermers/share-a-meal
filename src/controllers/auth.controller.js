@@ -1,9 +1,31 @@
 const Joi = require('joi');
 const database = require('../../database/database');
+const jwt = require('jsonwebtoken');
 
 let loggedInUser = null;
 
 let controller = {
+  validateToken: (req, res, next) => {
+    let token = req.headers.authorization;
+    if (!token) {
+      const error = {
+        status: 401,
+        message: 'Unauthorized'
+      }
+      next(error);
+    }
+    jwt.verify(token, 'secret', (err, decoded) => {
+      if (err) {
+        const error = {
+          status: 401,
+          message: 'Unauthorized'
+        }
+        next(error);
+      }
+      loggedInUser = decoded;
+      next();
+    });
+  },
   validateLogin: (req, res, next) => {
     let { emailAdress, password } = req.body;
     const schema = Joi.object({
@@ -23,7 +45,7 @@ let controller = {
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
+      connection.query('SELECT * FROM user WHERE emailAdress = ?;', [emailAdress], function (error, results, fields) {
         connection.release();
         if (error) throw error;
 
@@ -36,7 +58,7 @@ let controller = {
         }
       });
 
-      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}' AND password = '${password}'`, function (error, results, fields) {
+      connection.query('SELECT * FROM user WHERE emailAdress = ? AND password = ?', [emailAdress, password], function (error, results, fields) {
         connection.release();
 
         if (error) throw error;
@@ -56,17 +78,28 @@ let controller = {
   login: (req, res) => {
     let { emailAdress } = req.body;
 
+    let query = `SELECT * FROM user WHERE emailAdress = ?;`;
+
     database.getConnection(function (err, connection) {
       if (err) throw err;
-      connection.query(`SELECT * FROM user WHERE emailAdress = '${emailAdress}'`, function (error, results, fields) {
+      connection.query(query, [emailAdress], function (error, results, fields) {
         connection.release();
 
         if (error) throw error;
-
         loggedInUser = results[0];
-        res.status(200).json({
-          status: 200,
-          result: results[0]
+
+        jwt.sign({ id: loggedInUser.id }, 'privateKey' /* process.env.JWT_SECRET */, { expiresIn: '7d'}, function(err, token) {
+          if (err) console.log(err);
+          if (token) {
+            console.log(token);
+            res.status(200).json({
+              status: 200,
+              result: {
+                token: token,
+                user: loggedInUser
+              }
+            });
+          }
         });
       });
     });
