@@ -59,6 +59,7 @@ let controller = {
         if (results.length > 0) {
           let user = results[0]; 
           if (user.password === password) {
+            delete user.password;
             const payload = {
               userId: user.id,
             }
