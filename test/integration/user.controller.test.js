@@ -120,7 +120,6 @@ describe('Manager users', () => {
           result.should.have.property('lastName');
           result.should.have.property('isActive');
           result.should.have.property('emailAdress');
-          result.should.have.property('password');
           result.should.have.property('phoneNumber');
           result.should.have.property('roles');
           result.should.have.property('street');
