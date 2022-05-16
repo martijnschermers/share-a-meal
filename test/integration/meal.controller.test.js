@@ -1,14 +1,22 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../../src/index');
-const database = require('../../database/database')
+const database = require('../../database/database');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+let token = '';
 
 chai.should();
 chai.use(chaiHttp);
 
 const CLEAR_MEAL_TABLE = 'DELETE IGNORE FROM `meal`;'
 const CLEAR_PARTICIPANTS_TABLE = 'DELETE IGNORE FROM `meal_participants_user`;'
-const CLEAR_DB = CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE 
+const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;'
+const CLEAR_DB = CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE + CLEAR_USERS_TABLE
+
+const INSERT_USER =
+  'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
+  '(1, "John", "Doe", "johndoe@gmail.com", "secret", "street", "city");'
 
 const INSERT_MEAL =
   'INSERT INTO `meal` VALUES' +
@@ -20,12 +28,12 @@ describe('Manager meals', () => {
       if (err) throw err
 
       connection.query(
-        CLEAR_DB + INSERT_MEAL,
+        CLEAR_DB + INSERT_USER + INSERT_MEAL,
         function (error, results, fields) {
           connection.release()
 
           if (error) throw error
-          done()
+          done(); 
         }
       );
     });
@@ -33,6 +41,7 @@ describe('Manager meals', () => {
 
   describe('UC-301 /POST meal', () => { 
     it('TC-301-1 | it should not POST a meal with missing required fields', (done) => {
+      token = jwt.sign({ userId: 1 }, process.env.JWT_SECRET, { expiresIn: '1h' });
       let meal = {
         // Name missing
         description: 'Een heerlijke klassieker! Altijd goed voor tevreden gesmikkel!',
@@ -48,17 +57,18 @@ describe('Manager meals', () => {
       }
       chai.request(server)
         .post('/api/meal')
+        .set('Authorization', `Bearer ${token}`)
         .send(meal)
         .end((err, res) => {
-          let { status, result } = res.body;
+          let { status, message } = res.body;
           status.should.eql(400);
           res.body.should.be.an('object');
-          result.should.be.a('string').eql('name is required');
+          message.should.be.a('string').eql('name is required');
         });
       done();
     });
 
-    it.skip('TC-301-2 | it should not POST a meal when there is no logged in user', (done) => {
+    it('TC-301-2 | it should not POST a meal when there is no logged in user', (done) => {
       let meal = {
         name: 'Pasta Bolognese met tomaat, spekjes en kaas',
         description: 'Een heerlijke klassieker! Altijd goed voor tevreden gesmikkel!',
@@ -76,37 +86,37 @@ describe('Manager meals', () => {
         .post('/api/meal')
         .send(meal)
         .end((err, res) => {
-          let { status, result } = res.body;
+          let { status, message } = res.body;
           status.should.eql(401);
           res.body.should.be.an('object');
-          result.should.be.a('string').eql('there must be a user logged in');
+          message.should.be.a('string').eql('Authorization header missing.');
         });
       done();
     });
 
     it('TC-301-3 | it should POST a meal', (done) => {
       let meal = {
-        name: 'Pasta Bolognese met tomaat, spekjes en kaas',
+        name: 'Spaghetti Bolognese',
         description: 'Een heerlijke klassieker! Altijd goed voor tevreden gesmikkel!',
-        isActive: 1,
-        isVega: 1,
-        isVegan: 1,
-        isToTakeHome: 1,
+        isActive: true,
+        isVega: true,
+        isVegan: true,
+        isToTakeHome: true,
         dateTime: '2022-04-26 12:33:51.000000',
         imageUrl: 'https://miljuschka.nl/wp-content/uploads/2021/02/Pasta-bolognese-3-2.jpg',
-        allergenes: 'gluten,lactose',
+        allergenes: ['gluten' ,'lactose'],
         maxAmountOfParticipants: 4,
         price: 12.75
       }
       chai.request(server)
         .post('/api/meal')
+        .set('Authorization', `Bearer ${token}`)
         .send(meal)
         .end((err, res) => {
           let { status, result } = res.body;
           status.should.eql(201);
           res.body.should.be.an('object');
-          result.should.have.property('id');
-          // Rest of the properties 
+          result.should.be.a('array');
         });
       done();
     });
