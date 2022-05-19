@@ -15,7 +15,7 @@ const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;'
 const CLEAR_DB = CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE + CLEAR_USERS_TABLE
 let INSERT_USER = '';
 
-bcrypt.hash('secret', 10, function(err, hash) {
+bcrypt.hash('Secret123', 10, function(err, hash) {
   INSERT_USER =
   'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
   '(1, "John", "Doe", "johndoe@gmail.com", "' + hash + '", "street", "city");'
@@ -61,7 +61,7 @@ describe('Manager users', () => {
         .post('/api/auth/login')
         .send({
           emailAdress: 'john@gmail',
-          password: 'secret'
+          password: 'Secret123'
         })
         .end((err, res) => {
           let { status, message } = res.body;
@@ -94,7 +94,7 @@ describe('Manager users', () => {
     it('TC-101-4 | User does not exist', (done) => {
       let user = {
         emailAdress: 'john@hotmail.com',
-        password: 'secret'
+        password: 'Secret123'
       }
       chai.request(server)
         .post('/api/auth/login')
@@ -114,7 +114,7 @@ describe('Manager users', () => {
         .post('/api/auth/login')
         .send({
           emailAdress: 'johndoe@gmail.com',
-          password: 'secret'
+          password: 'Secret123'
         })
         .end((err, res) => {
           let { status, result } = res.body;
@@ -165,7 +165,7 @@ describe('Manager users', () => {
         lastName: "Doe",
         street: "Lovensdijkstraat 61",
         city: "Breda",
-        password: "secret",
+        password: "Secret123",
         emailAdress: "invalidEmail"
       }
       chai.request(server)
@@ -197,7 +197,7 @@ describe('Manager users', () => {
           res.body.should.be.a('object');
           let { status, message } = res.body;
           status.should.eql(400);
-          message.should.be.a('string').eql(`password with value ${user.password} fails to match the required pattern: /^[a-zA-Z0-9]{3,30}$/`);
+          message.should.be.a('string').eql('password with value se fails to match the required pattern: /^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$/');
           done();
         }
       );
@@ -209,7 +209,7 @@ describe('Manager users', () => {
         lastName: "Doe",
         street: "Lovensdijkstraat 61",
         city: "Breda",
-        password: "secret",
+        password: "Secret123",
         emailAdress: "johndoe@gmail.com"
       }
       chai.request(server)
@@ -231,7 +231,7 @@ describe('Manager users', () => {
         lastName: "Beton",
         street: "Lovensdijkstraat 61",
         city: "Breda",
-        password: "secret",
+        password: "Secret123",
         emailAdress: "johnbeton@gmail.com"
       }
       chai.request(server)
@@ -365,7 +365,7 @@ describe('Manager users', () => {
         street: "Lovensdijkstraat 61",
         city: "Breda",
         // Email is missing
-        password: "secret",
+        password: "Secret123",
         phoneNumber: "0612425475"
       }
       chai.request(server)
@@ -389,7 +389,7 @@ describe('Manager users', () => {
         street: "Lovensdijkstraat 61",
         city: "Breda",
         emailAdress: "johndoe@gmail.com",
-        password: "secret",
+        password: "Secret123",
         phoneNumber: "invalidPhoneNumber"
       }
       chai.request(server)
@@ -413,7 +413,7 @@ describe('Manager users', () => {
         street: "Lovensdijkstraat 61",
         city: "Breda",
         emailAdress: "johndoe@gmail.com",
-        password: "secret",
+        password: "Secret123",
         phoneNumber: "0612425475"
       }
       chai.request(server)
@@ -437,7 +437,7 @@ describe('Manager users', () => {
         street: "Lovensdijkstraat 61",
         city: "Breda",
         emailAdress: "johndoe@gmail.com",
-        password: "secret",
+        password: "Secret123",
         phoneNumber: "0612425475"
       }
       chai.request(server)
@@ -460,7 +460,7 @@ describe('Manager users', () => {
         street: "Lovensdijkstraat 61",
         city: "Breda",
         emailAdress: "johnbeton@gmail.com",
-        password: "secret",
+        password: "Secret123",
         phoneNumber: "0612425475"
       }
       chai.request(server)

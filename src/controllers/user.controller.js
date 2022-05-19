@@ -12,7 +12,7 @@ let controller = {
     const schema = Joi.object({
       firstName: Joi.string().alphanum().required(),
       lastName: Joi.string().alphanum().required(),
-      password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
+      password: Joi.string().regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/).required(),
       street: Joi.string().required(),
       city: Joi.string().alphanum().required(),
       emailAdress: Joi.string().email({ minDomainSegments: 2 }),
