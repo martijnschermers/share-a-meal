@@ -1,5 +1,7 @@
 const Joi = require('joi');
 const database = require('../../database/database');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 let controller = {
   validateUser: (req, res, next) => {
@@ -32,14 +34,18 @@ let controller = {
         if (error) throw error;
 
         if (results.filter(item => item.emailAdress === user.emailAdress).length === 0) {
-          // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
-          connection.query('INSERT INTO user SET ?; SELECT * FROM user;', user, function (error, results, fields) {
-            connection.release();
-            if (error) throw error;
+          bcrypt.hash(user.password, saltRounds, function(err, hash) {
+            user.password = hash; 
 
-            res.status(201).json({
-              status: 201,
-              result: results[1]
+            // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
+            connection.query('INSERT INTO user SET ?; SELECT * FROM user;', user, function (error, results, fields) {
+              connection.release();
+              if (error) throw error;
+
+              res.status(201).json({
+                status: 201,
+                result: results[1]
+              });
             });
           });
         } else {
