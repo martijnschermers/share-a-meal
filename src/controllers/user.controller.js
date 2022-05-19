@@ -1,9 +1,14 @@
 const Joi = require('joi');
 const database = require('../../database/database');
+const logger = require('../config/config');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 let controller = {
   validateUser: (req, res, next) => {
     let user = req.body;
+    logger.info('Validating user');
+
     const schema = Joi.object({
       firstName: Joi.string().alphanum().required(),
       lastName: Joi.string().alphanum().required(),
@@ -26,20 +31,25 @@ let controller = {
   addUser: (req, res, next) => {
     database.getConnection(function (err, connection) {
       let user = req.body;
+      logger.info('Adding user: ', user);
 
       if (err) throw err;
       connection.query('SELECT * FROM user;', function (error, results, fields) {
         if (error) throw error;
 
         if (results.filter(item => item.emailAdress === user.emailAdress).length === 0) {
-          // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
-          connection.query('INSERT INTO user SET ?; SELECT * FROM user;', user, function (error, results, fields) {
-            connection.release();
-            if (error) throw error;
+          bcrypt.hash(user.password, saltRounds, function(err, hash) {
+            user.password = hash; 
 
-            res.status(201).json({
-              status: 201,
-              result: results[1]
+            // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
+            connection.query('INSERT INTO user SET ?; SELECT * FROM user;', user, function (error, results, fields) {
+              connection.release();
+              if (error) throw error;
+
+              res.status(201).json({
+                status: 201,
+                result: results[1]
+              });
             });
           });
         } else {
@@ -55,6 +65,7 @@ let controller = {
   getAllUsers: (req, res) => {
     let { name, isActive } = req.query;
     let query = 'SELECT * FROM user';
+    logger.info('Getting all users');
 
     if (name || isActive) {
       query += ' WHERE ';
@@ -89,6 +100,8 @@ let controller = {
   },
   getProfile: (req, res, next) => {
     let id = req.userId;
+    logger.info('Getting profile for user with id: ', id);
+
     if (id) {
       database.getConnection(function (err, connection) {
         if (err) throw err;
@@ -120,9 +133,10 @@ let controller = {
     }
   },
   getUserById: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let id = req.params.id;
+    let id = req.params.id;
+    logger.info('Getting user with id: ', id);
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       connection.query('SELECT * FROM user WHERE id = ?;', [id], function (error, results, fields) {
@@ -146,6 +160,8 @@ let controller = {
   },
   validateUpdate: (req, res, next) => {
     let { firstName, lastName, emailAdress, password, phoneNumber } = req.body;
+    logger.info('Validating update for user with id: ', req.userId);
+
     const schema = Joi.object({
       firstName: Joi.string().alphanum().required(),
       lastName: Joi.string().alphanum().required(),
@@ -167,6 +183,7 @@ let controller = {
   updateUser: (req, res, next) => {
     let id = req.params.id;
     let { firstName, lastName, emailAdress, password, phoneNumber, street, city } = req.body;
+    logger.info('Updating user with id: ', id);
 
     database.getConnection(function (err, connection) {
       if (err) throw err;
@@ -206,9 +223,10 @@ let controller = {
     });
   },
   deleteUser: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let id = req.params.id;
+    let id = req.params.id;
+    logger.info('Deleting user with id: ', id);
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       connection.query(`DELETE FROM user WHERE id = ?; SELECT * FROM user;`, [id], function (error, results, fields) {

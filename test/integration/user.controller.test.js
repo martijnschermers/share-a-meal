@@ -1,7 +1,9 @@
+process.env.LOGLEVEL = 'warn'
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../../src/index');
 const database = require('../../database/database');
+const bcrypt = require('bcrypt');
 let token = '';
 
 chai.should();
@@ -11,10 +13,13 @@ const CLEAR_MEAL_TABLE = 'DELETE IGNORE FROM `meal`;'
 const CLEAR_PARTICIPANTS_TABLE = 'DELETE IGNORE FROM `meal_participants_user`;'
 const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;'
 const CLEAR_DB = CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE + CLEAR_USERS_TABLE
+let INSERT_USER = '';
 
-const INSERT_USER =
+bcrypt.hash('secret', 10, function(err, hash) {
+  INSERT_USER =
   'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
-  '(1, "John", "Doe", "johndoe@gmail.com", "secret", "street", "city");'
+  '(1, "John", "Doe", "johndoe@gmail.com", "' + hash + '", "street", "city");'
+});
 
 describe('Manager users', () => {
   beforeEach((done) => {
