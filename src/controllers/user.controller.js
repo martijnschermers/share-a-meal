@@ -146,7 +146,7 @@ let controller = {
         if (results.length > 0) {
           res.status(200).json({
             status: 200,
-            result: results
+            result: results[0]
           });
         } else {
           const error = {
@@ -202,7 +202,7 @@ let controller = {
 
                 res.status(200).json({
                   status: 200,
-                  result: results[1]
+                  result: results[1][0]
                 });
               });
           } else {
