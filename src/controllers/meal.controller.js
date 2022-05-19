@@ -184,25 +184,27 @@ let controller = {
   participate: (req, res, next) => {
     let id = req.params.id;
     let userId = req.userId;
+    let isParticipating = true; 
     logger.info('Participating in meal with id: ', id);
 
     database.getConnection(function (err, connection) {
-
       if (err) throw err;
 
       connection.query('SELECT * FROM meal WHERE id = ?; SELECT * FROM meal_participants_user WHERE mealId = ?;', [id, id], function (error, results, fields) {
         if (error) throw error;
 
         if (results[0].length > 0) {
-          if (results[1][0].userId == userId) {
-            connection.query(`DELETE FROM meal_participants_user WHERE userId = ? AND mealId = ?;`, [userId, id], function (error, results, fields) {
+          if (results[1].length > 0 && results[1][0].userId == userId) {
+            connection.query('DELETE FROM meal_participants_user WHERE userId = ? AND mealId = ?;', [userId, id], function (error, results, fields) {
               if (error) throw error;
+              isParticipating = false; 
             });
           } else {
             if (results[1].length < results[0][0].maxAmountOfParticipants) {
               connection.query('INSERT INTO meal_participants_user SET ?; SELECT * FROM meal_participants_user;', { mealId: id, userId: userId }, function (error, results, fields) {
                 connection.release();
                 if (error) throw error;
+                isParticipating = true; 
               });
             } else {
               const error = {
@@ -216,7 +218,7 @@ let controller = {
           res.status(200).json({
             status: 200,
             result: {
-              currentlyParticipating: true,
+              currentlyParticipating: isParticipating,
               currentAmountOfParticipants: results[1].length,
             }
           });
