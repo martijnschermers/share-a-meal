@@ -92,21 +92,36 @@ let controller = {
       let id = req.params.id;
       let { name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, allergenes, maxAmountOfParticipants, price } = req.body;
       let convertedAllergenes = allergenes.toString();
+      let userId = req.userId;
 
       if (err) throw err;
 
-      connection.query(
-        `UPDATE meal SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, imageUrl = ?, allergenes = ?, maxAmountOfParticipants = ?, price = ? WHERE id = ?; 
-        SELECT * FROM meal;`,
-        [name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, convertedAllergenes, maxAmountOfParticipants, price, id], function (error, results, fields) {
-          connection.release();
+      if (userId) {
+        connection.query('SELECT * FROM meal WHERE id = ?;', [id], function (error, results, fields) {
           if (error) throw error;
 
-          if (results[0].affectedRows > 0) {
-            res.status(200).json({
-              status: 200,
-              result: results[1]
-            });
+          if (results.length > 0) {
+            connection.query(
+              `UPDATE meal SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, imageUrl = ?, allergenes = ?, maxAmountOfParticipants = ?, price = ? WHERE id = ? AND cookId = ?;
+              SELECT * FROM meal;`,
+              [name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, convertedAllergenes, maxAmountOfParticipants, price, id, userId], function (error, results, fields) {
+                connection.release();
+                if (error) throw error;
+
+                if (results[0].affectedRows > 0) {
+                  res.status(200).json({
+                    status: 200,
+                    result: results[1]
+                  });
+                } else {
+                  const error = {
+                    status: 403,
+                    message: 'Logged in user is not the owner of this meal.'
+                  };
+                  next(error);
+                }
+              }
+            );
           } else {
             const error = {
               status: 404,
@@ -115,6 +130,7 @@ let controller = {
             next(error);
           }
         });
+      }
     });
   },
   deleteMeal: (req, res, next) => {
