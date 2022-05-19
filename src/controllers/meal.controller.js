@@ -82,7 +82,7 @@ let controller = {
         if (results.length > 0) {
           res.status(200).json({
             status: 200,
-            result: results
+            result: results[0]
           });
         } else {
           const error = {
@@ -111,15 +111,15 @@ let controller = {
           if (results.length > 0) {
             connection.query(
               `UPDATE meal SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, imageUrl = ?, allergenes = ?, maxAmountOfParticipants = ?, price = ? WHERE id = ? AND cookId = ?;
-              SELECT * FROM meal;`,
-              [name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, convertedAllergenes, maxAmountOfParticipants, price, id, userId], function (error, results, fields) {
+              SELECT * FROM meal WHERE id = ?;`,
+              [name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, convertedAllergenes, maxAmountOfParticipants, price, id, userId, id], function (error, results, fields) {
                 connection.release();
                 if (error) throw error;
 
                 if (results[0].affectedRows > 0) {
                   res.status(200).json({
                     status: 200,
-                    result: results[1]
+                    result: results[1][0]
                   });
                 } else {
                   const error = {
