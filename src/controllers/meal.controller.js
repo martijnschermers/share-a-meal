@@ -133,7 +133,7 @@ let controller = {
           } else {
             const error = {
               status: 404,
-              message: 'Meal does not exist'
+              message: 'Meal not found'
             };
             next(error);
           }
@@ -173,7 +173,7 @@ let controller = {
           } else {
             const error = {
               status: 404,
-              message: 'Meal does not exist'
+              message: 'Meal not found'
             };
             next(error);
           }

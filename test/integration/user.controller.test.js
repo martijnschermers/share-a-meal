@@ -423,7 +423,7 @@ describe('Manager users', () => {
         .end((err, res) => {
           let { status, message } = res.body;
           status.should.eql(400);
-          message.should.be.a('string').eql('User does not exist');
+          message.should.be.a('string').eql('User not found');
           done();
         }
       );
