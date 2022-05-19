@@ -388,4 +388,47 @@ describe('Manager meals', () => {
       );
     });
   });
+
+  describe.skip('UC-401 | Participate in a meal', () => {
+    it('TC-401-1 | Not logged in', (done) => {
+      chai.request(server)
+        .post('/api/meal/1/participate')
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(401);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Authorization header missing.');
+          done();
+        }
+      );
+    });
+
+    it('TC-401-2 | Meal does not exist', (done) => {
+      chai.request(server)
+        .post('/api/meal/0/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(404);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Meal not found');
+          done();
+        }
+      );
+    });
+
+    it('TC-401-3 | Successfully participated', (done) => {
+      chai.request(server)
+        .post('/api/meal/1/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, result } = res.body;
+          status.should.eql(200);
+          res.body.should.be.an('object');
+          result.should.be.a('array');
+          done();
+        }
+      );
+    });
+  });
 });
