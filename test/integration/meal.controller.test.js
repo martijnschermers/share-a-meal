@@ -234,7 +234,7 @@ describe('Manager meals', () => {
           let { status, message } = res.body;
           status.should.eql(404);
           res.body.should.be.an('object');
-          message.should.be.a('string').eql('Meal does not exist');
+          message.should.be.a('string').eql('Meal not found');
           done();
         }
       );
@@ -368,7 +368,7 @@ describe('Manager meals', () => {
           let { status, message } = res.body;
           status.should.eql(404);
           res.body.should.be.an('object');
-          message.should.be.a('string').eql('Meal does not exist');
+          message.should.be.a('string').eql('Meal not found');
           done();
         }
       );

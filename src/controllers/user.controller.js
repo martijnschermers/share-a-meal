@@ -215,7 +215,7 @@ let controller = {
         } else {
           const error = {
             status: 400,
-            message: 'User does not exist'
+            message: 'User not found'
           };
           next(error);
         }
