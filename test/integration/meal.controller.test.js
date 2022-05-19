@@ -121,4 +121,89 @@ describe('Manager meals', () => {
       done();
     });
   });
+
+  describe('UC-302 /PUT meal', () => {
+    it('TC-302-1 | it should not update a meal with missing required fields', (done) => {
+      let meal = {
+        // Name is missing
+        description: 'Een heerlijke klassieker! Altijd goed voor tevreden gesmikkel!',
+        isActive: true,
+        isVega: true,
+        isVegan: true,
+        isToTakeHome: true,
+        dateTime: '2022-04-26 12:33:51.000000',
+        imageUrl: 'https://miljuschka.nl/wp-content/uploads/2021/02/Pasta-bolognese-3-2.jpg',
+        allergenes: ['gluten' ,'lactose'],
+        maxAmountOfParticipants: 4,
+        price: 12.75
+      }
+      chai.request(server)
+        .put('/api/meal/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send(meal)
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(400);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('name is required');
+        }
+      );
+      done();
+    });
+
+    it('TC-302-2 | it should not update a meal when there is no user logged in', (done) => {
+      let meal = {
+        name: 'Spaghetti Bolognese',
+        description: 'Een heerlijke klassieker! Altijd goed voor tevreden gesmikkel!',
+        isActive: true,
+        isVega: true,
+        isVegan: true,
+        isToTakeHome: true,
+        dateTime: '2022-04-26 12:33:51.000000',
+        imageUrl: 'https://miljuschka.nl/wp-content/uploads/2021/02/Pasta-bolognese-3-2.jpg',
+        allergenes: ['gluten' ,'lactose'],
+        maxAmountOfParticipants: 4,
+        price: 12.75
+      }
+      chai.request(server)
+        .put('/api/meal/1')
+        .send(meal)
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(401);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Authorization header missing.');
+        }
+      );
+      done();
+    });
+
+    it('TC-302-3 | it should not update a meal when the logged in user is not the owner of the meal', (done) => {
+      let meal = {
+        name: 'Spaghetti Bolognese',
+        description: 'Een heerlijke klassieker! Altijd goed voor tevreden gesmikkel!',
+        isActive: true,
+        isVega: true,
+        isVegan: true,
+        isToTakeHome: true,
+        dateTime: '2022-04-26 12:33:51.000000',
+        imageUrl: 'https://miljuschka.nl/wp-content/uploads/2021/02/Pasta-bolognese-3-2.jpg',
+        allergenes: ['gluten' ,'lactose'],
+        maxAmountOfParticipants: 4,
+        price: 12.75
+      }
+      chai.request(server)
+        .put('/api/meal/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send(meal)
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(403);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Logged in user is not the owner of this meal.');
+        }
+      );
+      done();
+    });
+  });
 });
