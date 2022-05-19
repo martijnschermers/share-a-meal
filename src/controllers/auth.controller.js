@@ -2,11 +2,14 @@ const Joi = require('joi');
 const database = require('../../database/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const logger = require('../config/config');
 require('dotenv').config(); 
 
 let controller = {
   validateToken: (req, res, next) => {
     let header = req.headers.authorization;
+    logger.info('Validating token');
+
     if (header) {
       let token = header.substring(7, header.length);
 
@@ -32,6 +35,8 @@ let controller = {
   },
   validateLogin: (req, res, next) => {
     let { emailAdress, password } = req.body;
+    logger.info('Validating login');
+
     const schema = Joi.object({
       password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
       emailAdress: Joi.string().email({ minDomainSegments: 2 }).required(),
@@ -49,6 +54,7 @@ let controller = {
   },
   login: (req, res, next) => {
     let { emailAdress, password } = req.body;
+    logger.info('Logging in user with email: ', emailAdress);
 
     database.getConnection(function (err, connection) {
       if (err) throw err;

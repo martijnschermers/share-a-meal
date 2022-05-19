@@ -1,8 +1,11 @@
 const Joi = require('joi');
 const database = require('../../database/database');
+const logger = require('../config/config');
 
 let controller = {
   validateMeal: (req, res, next) => {
+    logger.info('Validating meal');
+
     const schema = Joi.object({
       name: Joi.string().required(),
       description: Joi.string().required(),
@@ -28,11 +31,12 @@ let controller = {
     next();
   },
   addMeal: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let meal = req.body;
-      meal.allergenes = meal.allergenes.toString();
-      meal.cookId = req.userId;
+    let meal = req.body;
+    meal.allergenes = meal.allergenes.toString();
+    meal.cookId = req.userId;
+    logger.info('Adding meal: ', meal);
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
@@ -48,6 +52,8 @@ let controller = {
     });
   },
   getAllMeals: (req, res) => {
+    logger.info('Getting all meals');
+
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
@@ -63,9 +69,10 @@ let controller = {
     });
   },
   getMealById: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let id = req.params.id;
+    let id = req.params.id;
+    logger.info('Getting meal by id: ', id);
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       connection.query('SELECT * FROM meal WHERE id = ?;', [id], function (error, results, fields) {
@@ -88,12 +95,13 @@ let controller = {
     });
   },
   updateMeal: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let id = req.params.id;
-      let { name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, allergenes, maxAmountOfParticipants, price } = req.body;
-      let convertedAllergenes = allergenes.toString();
-      let userId = req.userId;
+    let id = req.params.id;
+    let { name, description, isActive, isVega, isVegan, isToTakeHome, dateTime, imageUrl, allergenes, maxAmountOfParticipants, price } = req.body;
+    let convertedAllergenes = allergenes.toString();
+    let userId = req.userId;
+    logger.info('Updating meal with id: ', id);
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
       if (userId) {
@@ -134,32 +142,51 @@ let controller = {
     });
   },
   deleteMeal: (req, res, next) => {
-    database.getConnection(function (err, connection) {
-      let id = req.params.id;
+    let id = req.params.id;
+    let userId = req.userId;
+    logger.info('Deleting meal with id: ', id);
 
+    database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query(`DELETE FROM meal WHERE id = ?; SELECT * FROM meal;`, [id], function (error, results, fields) {
-        if (error) throw error;
+      if (userId) {
+        connection.query('SELECT * FROM meal WHERE id = ?;', [id], function (error, results, fields) {
+          if (error) throw error;
 
-        if (results[0].affectedRows > 0) {
-          res.status(200).json({
-            status: 200,
-            result: results[1]
-          });
-        } else {
-          const error = {
-            status: 404,
-            message: 'Meal not found'
-          };
-          next(error);
-        }
-      });
+          if (results.length > 0) {
+            connection.query(`DELETE FROM meal WHERE id = ? AND cookId = ?; SELECT * FROM meal;`, [id, userId], function (error, results, fields) {
+              if (error) throw error;
+
+              if (results[0].affectedRows > 0) {
+                res.status(200).json({
+                  status: 200,
+                  result: results[1]
+                });
+              } else {
+                const error = {
+                  status: 400,
+                  message: 'Not allowed to edit'
+                };
+                next(error);
+              }
+            });
+          } else {
+            const error = {
+              status: 404,
+              message: 'Meal does not exist'
+            };
+            next(error);
+          }
+        });
+      }
     });
   },
   participate: (req, res, next) => {
+    let id = req.params.id;
+    let userId = req.userId;
+    logger.info('Participating in meal with id: ', id);
+
     database.getConnection(function (err, connection) {
-      let id = req.params.id;
 
       if (err) throw err;
 
@@ -167,13 +194,13 @@ let controller = {
         if (error) throw error;
 
         if (results[0].length > 0) {
-          if (results[1][0].userId == req.userId) {
-            connection.query(`DELETE FROM meal_participants_user WHERE userId = ? AND mealId = ?;`, [req.userId, id], function (error, results, fields) {
+          if (results[1][0].userId == userId) {
+            connection.query(`DELETE FROM meal_participants_user WHERE userId = ? AND mealId = ?;`, [userId, id], function (error, results, fields) {
               if (error) throw error;
             });
           } else {
             if (results[1].length < results[0][0].maxAmountOfParticipants) {
-              connection.query('INSERT INTO meal_participants_user SET ?; SELECT * FROM meal_participants_user;', { mealId: id, userId: req.userId }, function (error, results, fields) {
+              connection.query('INSERT INTO meal_participants_user SET ?; SELECT * FROM meal_participants_user;', { mealId: id, userId: userId }, function (error, results, fields) {
                 connection.release();
                 if (error) throw error;
               });
