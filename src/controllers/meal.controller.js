@@ -32,17 +32,23 @@ let controller = {
   },
   addMeal: (req, res, next) => {
     let meal = req.body;
+    let userId = req.userId;
     meal.allergenes = meal.allergenes.toString();
-    meal.cookId = req.userId;
+    meal.cookId = userId;
     logger.info('Adding meal: ', meal);
 
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
+      
       // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
       connection.query('INSERT INTO meal SET ?; SELECT * FROM meal;', meal, function (error, results, fields) {
         connection.release();
         if (error) throw error;
+
+        connection.query('INSERT INTO meal_participants_user SET ?;', { mealId: results[0].insertId, userId: userId }, function (error, results, fields) {
+          if (error) throw error;
+        });
 
         res.status(201).json({
           status: 201,
