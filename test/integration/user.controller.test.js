@@ -56,7 +56,7 @@ describe('Manager users', () => {
       );
     });
 
-    it('TC-101-2 | Invalid emailadress', (done) => {
+    it('TC-101-2 | Invalid e-mail address', (done) => {
       chai.request(server)
         .post('/api/auth/login')
         .send({
@@ -139,12 +139,13 @@ describe('Manager users', () => {
 
   describe('UC-201 | Register as a new user', () => {
     it('TC-201-1 | Required field is missing', (done) => {
-      // User misses emailAdress and password field for testing 
       let user = {
         firstName: "John",
         lastName: "Doe",
         street: "Lovensdijkstraat 61",
         city: "Breda",
+        // Password missing
+        emailAdress: 'johndoe@gmail.com',
       }
       chai.request(server)
         .post('/api/user')
@@ -159,7 +160,7 @@ describe('Manager users', () => {
       );
     });
 
-    it('TC-201-2 | Invalid emailadress', (done) => {
+    it('TC-201-2 | Invalid e-mail address', (done) => {
       let user = {
         firstName: "John",
         lastName: "Doe",
@@ -252,6 +253,66 @@ describe('Manager users', () => {
     it('TC-202-1 | Show 1 user', (done) => {
       chai.request(server)
         .get('/api/user')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.an('array');
+          result.length.should.be.eql(1);
+          done();
+        }
+      );
+    });
+
+    it('TC-202-3 | Show users with search term on non existing name', (done) => {
+      chai.request(server)
+        .get('/api/user?name=Kees')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.an('array');
+          result.length.should.be.eql(0);
+          done();
+        }
+      );
+    });
+
+    it('TC-202-4 | Show users with search term on the field isActive=false', (done) => {
+      chai.request(server)
+        .get('/api/user?isActive=false')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.an('array');
+          result.length.should.be.eql(0);
+          done();
+        }
+      );
+    });
+
+    it('TC-202-5 | Show users with search term on the field isActive=true', (done) => {
+      chai.request(server)
+        .get('/api/user?isActive=true')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.be.a('object');
+          let { status, result } = res.body;
+          status.should.eql(200);
+          result.should.be.an('array');
+          result.length.should.be.eql(1);
+          done();
+        }
+      );
+    });
+
+    it('TC-202-6 | Show users with search term on existing name', (done) => {
+      chai.request(server)
+        .get('/api/user?name=John')
         .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
           res.should.be.a('object');
@@ -357,7 +418,7 @@ describe('Manager users', () => {
   });
 
   describe('UC-205 | Update user', () => {
-    it('TC-205-1 | Required field emailadress is missing', (done) => {
+    it('TC-205-1 | Required field e-mail address is missing', (done) => {
       let user = {
         id: 1,
         firstName: "John",
