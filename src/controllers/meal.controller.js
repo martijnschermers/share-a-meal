@@ -40,7 +40,6 @@ let controller = {
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      
       // Multiple queries in one function is made possible due to the multipleStatements option in database.js 
       connection.query('INSERT INTO meal SET ?; SELECT * FROM meal;', meal, function (error, results, fields) {
         connection.release();
@@ -190,7 +189,8 @@ let controller = {
   participate: (req, res, next) => {
     let id = req.params.id;
     let userId = req.userId;
-    let isParticipating = true; 
+    let isParticipating = undefined; 
+    let maxAmountOfParticipants = undefined;
     logger.info('Participating in meal with id: ', id);
 
     database.getConnection(function (err, connection) {
@@ -200,20 +200,22 @@ let controller = {
         if (error) throw error;
 
         if (results.length > 0) {
+          maxAmountOfParticipants = results[0].maxAmountOfParticipants;
           connection.query('SELECT * FROM meal_participants_user WHERE mealId = ?;', [id], function (error, results, fields) {
             if (error) throw error;
             
-            if (results[0].userId == userId) {
+            if (results.length > 0 && results[0].userId == userId) {
               connection.query('DELETE FROM meal_participants_user WHERE userId = ? AND mealId = ?;', [userId, id], function (error, results, fields) {
                 if (error) throw error;
-                isParticipating = true; 
               });
+              isParticipating = true; 
             } else {
-              if (results[1].length < results[0][0].maxAmountOfParticipants) {
+              if (results.length < maxAmountOfParticipants) {
                 connection.query('INSERT INTO meal_participants_user SET ?;', { mealId: id, userId: userId }, function (error, results, fields) {
                   connection.release();
                   if (error) throw error;
                 });
+                isParticipating = false; 
               } else {
                 const error = {
                   status: 400,
@@ -227,7 +229,7 @@ let controller = {
               status: 200,
               result: {
                 currentlyParticipating: isParticipating,
-                currentAmountOfParticipants: results[1].length,
+                currentAmountOfParticipants: results.length,
               }
             });
           });
