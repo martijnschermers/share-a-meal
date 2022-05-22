@@ -88,7 +88,7 @@ let controller = {
           });
         } else {
           const err = {
-            status: 401,
+            status: 404,
             message: 'User not found'
           };
           next(err);

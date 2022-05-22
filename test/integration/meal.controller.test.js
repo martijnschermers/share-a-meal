@@ -352,7 +352,7 @@ describe('Manager meals', () => {
         .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
           let { status, message } = res.body;
-          status.should.eql(400);
+          status.should.eql(403);
           res.body.should.be.an('object');
           message.should.be.a('string').eql('Not allowed to edit');
           done();

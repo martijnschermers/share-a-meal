@@ -102,7 +102,7 @@ describe('Manager users', () => {
         .send(user)
         .end((err, res) => {
           let { status, message } = res.body;
-          status.should.eql(401);
+          status.should.eql(404);
           res.body.should.be.an('object');
           message.should.be.a('string').eql('User not found');
           done();

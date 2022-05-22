@@ -169,7 +169,7 @@ let controller = {
                 });
               } else {
                 const error = {
-                  status: 400,
+                  status: 403,
                   message: 'Not allowed to edit'
                 };
                 next(error);
