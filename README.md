@@ -31,6 +31,20 @@ Install dependencies
   npm install
 ```
 
+Create a local database
+```bash
+  cd share-a-meal
+  mysql -u root
+```
+
+```sql
+  CREATE DATABASE share_a_meal;
+  USE share_a_meal;
+  SOURCE database.sql;
+```
+
+Start the database with [XAMPP](https://www.apachefriends.org/index.html)
+
 Start the server
 
 ```bash
