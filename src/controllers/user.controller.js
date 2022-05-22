@@ -224,19 +224,34 @@ let controller = {
   },
   deleteUser: (req, res, next) => {
     let id = req.params.id;
+    let userId = req.userId;
     logger.info('Deleting user with id: ', id);
 
     database.getConnection(function (err, connection) {
       if (err) throw err;
 
-      connection.query(`DELETE FROM user WHERE id = ?; SELECT * FROM user;`, [id], function (error, results, fields) {
+      connection.query('SELECT * FROM user WHERE id = ?', [id], function (error, results, fields) {
         if (error) throw error;
 
-        if (results[0].affectedRows > 0) {
-          res.status(200).json({
-            status: 200,
-            result: results[1]
-          });
+        if (results.length > 0) {
+          if (userId == id) {
+            connection.query(`DELETE FROM user WHERE id = ?; SELECT * FROM user;`, [id], function (error, results, fields) {
+              if (error) throw error;
+      
+              if (results[0].affectedRows > 0) {
+                res.status(200).json({
+                  status: 200,
+                  result: results[1]
+                });
+              } 
+            });
+          } else {
+            const error = {
+              status: 403,
+              message: 'Logged in user is not allowed to delete this user.'
+            };
+            next(error);
+          }
         } else {
           const error = {
             status: 400,

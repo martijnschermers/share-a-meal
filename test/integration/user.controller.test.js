@@ -18,7 +18,8 @@ let INSERT_USER = '';
 bcrypt.hash('Secret123', 10, function(err, hash) {
   INSERT_USER =
   'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
-  '(1, "John", "Doe", "johndoe@gmail.com", "' + hash + '", "street", "city");'
+  '(1, "John", "Doe", "johndoe@gmail.com", "' + hash + '", "street", "city"),' +
+  '(2, "Maria", "Doe", "mariadoe@gmail.com", "' + hash + '", "street", "city");'
 });
 
 describe('Manager users', () => {
@@ -250,7 +251,7 @@ describe('Manager users', () => {
   });
 
   describe('UC-202 | Overview of users', () => {
-    it('TC-202-1 | Show 1 user', (done) => {
+    it('TC-202-1 | Show 2 users', (done) => {
       chai.request(server)
         .get('/api/user')
         .set('Authorization', `Bearer ${token}`)
@@ -259,7 +260,7 @@ describe('Manager users', () => {
           let { status, result } = res.body;
           status.should.eql(200);
           result.should.be.an('array');
-          result.length.should.be.eql(1);
+          result.length.should.be.eql(2);
           done();
         }
       );
@@ -304,7 +305,7 @@ describe('Manager users', () => {
           let { status, result } = res.body;
           status.should.eql(200);
           result.should.be.an('array');
-          result.length.should.be.eql(1);
+          result.length.should.be.eql(2);
           done();
         }
       );
@@ -572,7 +573,20 @@ describe('Manager users', () => {
       );
     });
 
-    it('TC-206-3 | User successfully deleted', (done) => {
+    it('TC-206-3 | Logged in user is not allowed to delete the user', (done) => {
+      chai.request(server)
+        .delete('/api/user/2')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(403);
+          message.should.be.a('string').eql('Logged in user is not allowed to delete this user.');
+          done();
+        }
+      );
+    });
+
+    it('TC-206-4 | User successfully deleted', (done) => {
       chai.request(server)
         .delete('/api/user/1')
         .set('Authorization', `Bearer ${token}`)
